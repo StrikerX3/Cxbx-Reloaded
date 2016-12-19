@@ -59,6 +59,7 @@ namespace xboxkrnl
 // TODO : xboxkrnl::EXCEPTION_RECORD
 // TODO : xboxkrnl::FILE_DIRECTORY_INFORMATION
 // TODO : xboxkrnl::FILE_RENAME_INFORMATION
+// TODO : xboxkrnl::FILE_LINK_INFORMATION
 // TODO : xboxkrnl::FILE_FS_SIZE_INFORMATION
 // TODO : xboxkrnl::FILETIME
 // TODO : xboxkrnl::IO_STATUS_BLOCK / xboxkrnl::PIO_STATUS_BLOCK ->u1.Pointer, ->Information
