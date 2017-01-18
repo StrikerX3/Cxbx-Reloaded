@@ -82,41 +82,34 @@
 // ******************************************************************
 extern "C" const char *szHLELastCompileTime;
 
+extern const char *Lib_D3D8;
+extern const char *Lib_D3D8LTCG;
+extern const char *Lib_D3DX8;
+extern const char *Lib_DSOUND;
+extern const char *Lib_XACTENG;
+extern const char *Lib_XAPILIB;
+extern const char *Lib_XGRAPHC;
+extern const char *Lib_XNETS;
+extern const char *Lib_XONLINE; // TODO : Typo for XONLINES?
+extern const char *Lib_XONLINES;
+
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
-extern struct HLEData
+extern const struct HLEData
 {
-    char       *Library;
+    const char *Library;
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
     uint16      BuildVersion;
-
     OOVPATable *OovpaTable;
     uint32      OovpaTableSize;
 }
 HLEDataBase[];
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * HLEDataBaseCount
 // ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-// ******************************************************************
-// * XRefDataBase
-// ******************************************************************
-extern uint32 XRefDataBase[];
-
-// ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
-// * bXRefFirstPass
-// ******************************************************************
-extern bool bXRefFirstPass;
+extern const uint32 HLEDataBaseCount;
 
 // ******************************************************************
 // * XRefDataBaseOffset
@@ -335,6 +328,16 @@ enum XRefDataBaseOffset
     // +s
 //	XREF_XLoadSectionByHandle,
 //	XREF_XFreeSectionByHandle,
+
+	XREF_COUNT // XREF_COUNT must always be last.
+	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
-#endif
+#define XREF_UNKNOWN -1
+
+// ******************************************************************
+// * XRefDataBase
+// ******************************************************************
+extern uint32 XRefDataBase[XREF_COUNT];
+
+#endif /*HLEDATABASE_H*/

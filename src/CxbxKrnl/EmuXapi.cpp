@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -119,39 +121,6 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
 }
 
 // ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI XTL::EmuQueryPerformanceCounter
-(
-    PLARGE_INTEGER lpPerformanceCount
-)
-{
-	LOG_FUNC_ONE_ARG(lpPerformanceCount);
-
-    BOOL bRet = QueryPerformanceCounter(lpPerformanceCount);
-
-    // debug - 4x speed
-    //lpPerformanceCount->QuadPart *= 4;
-
-	RETURN(bRet);
-}
-
-// ******************************************************************
-// * func: EmuQueryPerformanceFrequency
-// ******************************************************************
-BOOL WINAPI XTL::EmuQueryPerformanceFrequency
-(
-    PLARGE_INTEGER lpFrequency
-)
-{
-	LOG_FUNC_ONE_ARG(lpFrequency);
-
-    BOOL bRet = QueryPerformanceFrequency(lpFrequency);
-
-	RETURN(bRet);
-}
-
-// ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI XTL::EmuXMountUtilityDrive
@@ -218,7 +187,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
         ret = (1 << 0);    // Return 1 Controller
     else
-        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
 	RETURN(ret);
 }
@@ -255,7 +224,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
 		else
 		{
 			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 		}
     }
     else
@@ -766,13 +735,13 @@ LPVOID WINAPI XTL::EmuCreateFiber
 	LPVOID					lpParameter
 )
 {
-    DbgPrintf("EmuXapi (0x%X): EmuCreateFiber\n"
+    DbgPrintf("EmuXapi: EmuCreateFiber\n"
            "(\n"
 		   "   dwStackSize         : 0x%.08X\n"
            "   lpStartRoutine      : 0x%.08X\n"
            "   lpParameter         : 0x%.08X\n"
            ");\n",
-            GetCurrentThreadId(), dwStackSize, lpStartRoutine, lpParameter);
+            dwStackSize, lpStartRoutine, lpParameter);
 
 	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
 	if( !pFiber )
@@ -798,11 +767,11 @@ VOID WINAPI XTL::EmuDeleteFiber
 )
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuDeleteFiber\n"
+	DbgPrintf("EmuXapi: EmuDeleteFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpFiber );
+			lpFiber );
 
 	DeleteFiber( lpFiber );
 
@@ -817,11 +786,11 @@ VOID WINAPI XTL::EmuSwitchToFiber
 )
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuSwitchToFiber\n"
+	DbgPrintf("EmuXapi: EmuSwitchToFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpFiber );
+			lpFiber );
 
 //	SwitchToFiber( lpFiber );	// <- Hangs/crashes...
 
@@ -847,11 +816,11 @@ LPVOID WINAPI XTL::EmuConvertThreadToFiber
 	LPVOID lpParameter
 )
 {
-	DbgPrintf("EmuXapi (0x%X): EmuConvertThreadToFiber\n"
+	DbgPrintf("EmuXapi: EmuConvertThreadToFiber\n"
 			"(\n"
 			"	lpParameter        : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpParameter );
+			lpParameter );
 
 	LPVOID pRet = ConvertThreadToFiber( lpParameter );
 	
@@ -867,11 +836,11 @@ LPVOID WINAPI XTL::EmuConvertThreadToFiber
 VOID WINAPI XTL::EmuXapiFiberStartup(DWORD dwDummy)
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuXapiFiberStarup()\n"
+	DbgPrintf("EmuXapi: EmuXapiFiberStarup()\n"
 			"(\n"
 			"	dwDummy            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), dwDummy);
+			dwDummy);
 
 
 	typedef void (__stdcall *pfDummyFunc)(DWORD dwDummy);
@@ -968,15 +937,15 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 
 	// If no path is specified, then the xbe is rebooting to dashboard
 	if (!lpTitlePath) {
-		char szDashboardPath[MAX_PATH];
-		EmuNtSymbolicLinkObject* symbolicLinkObject = FindNtSymbolicLinkObjectByDevice(DeviceHarddisk0Partition2);
-		sprintf(szDashboardPath, "%s\\xboxdash.xbe", symbolicLinkObject->NativePath.c_str());
+		char szDashboardPath[MAX_PATH] = { 0 };
+		XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
+		if(rootDevice != nullptr)
+			sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice->HostDevicePath.c_str());
 		
-		if (PathFileExists(szDashboardPath)) {
+		if (PathFileExists(szDashboardPath))
+		{
 			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
-			char szXboxDashboardPath[MAX_PATH];
-			sprintf(szXboxDashboardPath, "%c:\\xboxdash.xbe", symbolicLinkObject->DriveLetter);
-			EmuXLaunchNewImage(szXboxDashboardPath, pLaunchData);
+			EmuXLaunchNewImage("C:\\xboxdash.xbe", pLaunchData);
 		}
 			
 		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
@@ -988,8 +957,8 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	// Convert Xbox XBE Path to Windows Path
 	char szXbePath[MAX_PATH];
 
-	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByVolumeLetter(lpTitlePath[0]);
-	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->NativePath.c_str(), &lpTitlePath[2]);
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
 
 	// Determine Working Directory
 	char szWorkingDirectoy[MAX_PATH];
@@ -1108,20 +1077,6 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 }
 	
 // ******************************************************************
-// * func: EmuXGetFileCacheSize
-// ******************************************************************
-DWORD WINAPI XTL::EmuXGetFileCacheSize()
-{
-	LOG_FUNC();
-
-	// Return the default cache size for now.
-	// TODO: Save the file cache size if/when set.
-	DWORD dwRet = 64 * 1024;
-
-	RETURN(dwRet);
-}
-
-// ******************************************************************
 // * func: EmuSignalObjectAndWait
 // ******************************************************************
 DWORD WINAPI XTL::EmuSignalObjectAndWait
@@ -1142,24 +1097,6 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
 
 	RETURN(dwRet);
-}
-
-// ******************************************************************
-// * func: EmuPulseEvent
-// ******************************************************************
-BOOL WINAPI XTL::EmuPulseEvent
-( 
-	HANDLE hEvent 
-)
-{
-	LOG_FUNC_ONE_ARG(hEvent);
-
-	// TODO: This function might be a bit too high level.  If it is,
-	// feel free to implement NtPulseEvent in EmuKrnl.cpp
-
-	BOOL bRet = PulseEvent( hEvent );
-
-	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -1227,43 +1164,6 @@ VOID WINAPI XTL::EmuRaiseException
 }
 
 // ******************************************************************
-// * func: EmuGetFileAttributesA
-// ******************************************************************
-DWORD WINAPI XTL::EmuGetFileAttributesA
-(
-	LPCSTR			lpFileName    // name of file or directory
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(lpFileName)
-		LOG_FUNC_END;
-
-	// Deus Ex...
-
-	// Shave off the D:\ and default to the current directory.
-	// TODO: Other directories (i.e. Utility)?
-
-	char* szBuffer = (char*) lpFileName;
-
-	if((szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' || szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		 DbgPrintf("EmuXapi (0x%X): GetFileAttributesA Corrected path...\n", GetCurrentThreadId());
-         DbgPrintf("  Org:\"%s\"\n", lpFileName);
-         DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-    }
-
-	DWORD dwRet = GetFileAttributesA(szBuffer);
-	if(FAILED(dwRet))
-		EmuWarning("GetFileAttributes(\"%s\") failed!", szBuffer);
-
-	
-
-	RETURN(dwRet);
-}
-
-// ******************************************************************
 // func: XMountMUA
 // ******************************************************************
 DWORD WINAPI XTL::EmuXMountMUA
@@ -1283,61 +1183,6 @@ DWORD WINAPI XTL::EmuXMountMUA
 	// game saves a bit easier if the memory card directory was configurable. =]
 
 	RETURN(E_FAIL);
-}
-
-// ******************************************************************
-// func: EmuCreateWaitableTimer
-// ******************************************************************
-HANDLE WINAPI XTL::EmuCreateWaitableTimerA
-(
-	LPVOID					lpTimerAttributes, // SD
-	BOOL					bManualReset,      // reset type
-	LPCSTR					lpTimerName        // object name
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(lpTimerAttributes)
-		LOG_FUNC_ARG(bManualReset)
-		LOG_FUNC_ARG(lpTimerName)
-		LOG_FUNC_END;
-
-	// For Xbox titles, this param should always be NULL.
-	if(lpTimerAttributes)
-		EmuWarning("lpTimerAttributes != NULL");
-
-	HANDLE hRet = CreateWaitableTimerA( NULL, bManualReset, lpTimerName );
-
-	RETURN(hRet);
-}
-
-// ******************************************************************
-// func: EmuSetWaitableTimer
-// ******************************************************************
-BOOL WINAPI XTL::EmuSetWaitableTimer
-(
-	HANDLE				hTimer,                     // handle to timer
-	const LARGE_INTEGER *pDueTime,					// timer due time
-	LONG				lPeriod,                    // timer interval
-	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
-	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
-	BOOL				fResume                     // resume state
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(hTimer)
-		LOG_FUNC_ARG(pDueTime)
-		LOG_FUNC_ARG(lPeriod)
-		LOG_FUNC_ARG(pfnCompletionRoutine)
-		LOG_FUNC_ARG(lpArgToCompletionRoutine)
-		LOG_FUNC_ARG(fResume)
-		LOG_FUNC_END;
-
-	BOOL Ret = SetWaitableTimer( hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
-							lpArgToCompletionRoutine, fResume );
-	if(!Ret)
-		EmuWarning("SetWaitableTimer failed!");
-
-	RETURN(Ret);
 }
 
 // ******************************************************************

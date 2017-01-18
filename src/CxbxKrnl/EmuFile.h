@@ -42,6 +42,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include <vector>
 #include <cstdio>
 #include <string>
 #include <memory>
@@ -65,10 +66,12 @@ extern const std::string DriveCdRom0;
 extern const std::string DriveMbfs;
 extern const std::string DriveMbcom;
 extern const std::string DriveMbrom;
+extern const std::string DriveA;
 extern const std::string DriveC;
 extern const std::string DriveD;
 extern const std::string DriveE;
 extern const std::string DriveF;
+extern const std::string DriveS;
 extern const std::string DriveT;
 extern const std::string DriveU;
 extern const std::string DriveV;
@@ -101,7 +104,8 @@ extern const std::string DeviceHarddisk0Partition17;
 extern const std::string DeviceHarddisk0Partition18;
 extern const std::string DeviceHarddisk0Partition19;
 extern const std::string DeviceHarddisk0Partition20;
-extern const char CxbxDefaultXbeVolumeLetter;
+extern const char CxbxDefaultXbeDriveLetter;
+extern int CxbxDefaultXbeDriveIndex;
 
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;
@@ -200,11 +204,18 @@ class EmuNtSymbolicLinkObject : public EmuNtObject {
 public:
 	char DriveLetter;
 	std::string SymbolicLinkName;
-	std::string XboxFullPath;
-	std::string NativePath;
+	bool IsHostBasedPath;
+	std::string XboxSymbolicLinkPath;
+	std::string HostSymbolicLinkPath;
 	HANDLE RootDirectoryHandle;
 	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
 	~EmuNtSymbolicLinkObject();
+};
+
+struct XboxDevice {
+	std::string XboxDevicePath;
+	std::string HostDevicePath;
+	HANDLE HostRootHandle;
 };
 
 // ******************************************************************
@@ -216,13 +227,17 @@ HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
 CHAR* NtStatusToString(IN NTSTATUS Status);
 
+int CxbxRegisterDeviceHostPath(std::string XboxFullPath, std::string HostDevicePath, bool IsFile = false);
+int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
+XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath);
+
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter);
+EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
 void CleanupSymbolicLinks();
-bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePath, bool IsFile = false);
+
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
 NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
 bool CxbxMountUtilityDrive(bool formatClean);

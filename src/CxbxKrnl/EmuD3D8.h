@@ -42,6 +42,9 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
+// initialize render window
+extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+
 // initialize direct3d
 extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
@@ -1701,14 +1704,6 @@ HRESULT WINAPI EmuIDirect3DDevice8_DrawRectPatch
 HRESULT WINAPI EmuIDirect3DDevice8_GetProjectionViewportMatrix
 (
 	D3DXMATRIX *pProjectionViewport
-);
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BackFillMode
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_BackFillMode
-(
-	DWORD Value
 );
 
 // ******************************************************************

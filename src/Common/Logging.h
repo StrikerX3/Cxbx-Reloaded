@@ -36,7 +36,15 @@
 
 #pragma once
 
-#include "Cxbx.h"
+#include <windows.h> // For DWORD
+#include <sstream> // For std::stringstream
+#include <iostream> // For std::cout
+#include <iomanip> // For std::setw
+#include "Cxbx.h" // For g_bPrintfOn
+
+//
+// __FILENAME__
+//
 
 // From http://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
 constexpr const char* str_end(const char *str) {
@@ -55,11 +63,6 @@ constexpr const char* file_name(const char* str) {
 }
 
 #define __FILENAME__ file_name(__FILE__)
-
-#include <windows.h> // for DWORD
-#include <sstream> // for std::stringstream
-#include <iostream> // For std::cout
-#include <iomanip> // For std::setw
 
 //
 // Hex output (type safe)
@@ -124,8 +127,8 @@ template<class T>
 inline T _log_sanitize(T arg) { return arg; }
 
 // Sanitize C-style strings by converting NULL to "<nullptr>" to prevent null dereference
-inline const char * _log_sanitize(const char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
-inline const wchar_t * _log_sanitize(const wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
+inline const char * _log_sanitize(char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
+inline const wchar_t * _log_sanitize(wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
 
 // Convert booleans to strings properly
 inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
@@ -136,21 +139,16 @@ inline const char * _log_sanitize(BOOLEAN value) { return value ? "TRUE" : "FALS
 //
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
-extern thread_local const DWORD _CurrentThreadId;
-
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
-
 
 #ifdef _DEBUG_TRACE
 	#define LOG_FUNC_BEGIN \
 		do { if(g_bPrintfOn) { \
 			bool _had_arg = false; \
-			if (_logPrefix.empty()) { \
-				std::stringstream tmp; \
-				tmp << __FILENAME__ << " (" << hex2((uint16_t)_CurrentThreadId) << "): "; \
-				_logPrefix = tmp.str(); \
-			}; \
+			std::stringstream tmp; \
+			tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] " << __FILENAME__ << ": "; \
+			_logPrefix = tmp.str(); \
 			std::stringstream msg; \
 			msg << _logPrefix << __func__ << "(";
 
@@ -188,12 +186,18 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_RESULT(r)
 #endif
 
+//
 // Short hand defines :
+//
+
 // Log function without arguments
 #define LOG_FUNC() LOG_FUNC_BEGIN LOG_FUNC_END
 
 // Log function with one argument
 #define LOG_FUNC_ONE_ARG(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG(arg) LOG_FUNC_END 
+
+// Log function with one typed argument
+#define LOG_FUNC_ONE_ARG_TYPE(type, arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_TYPE(type, arg) LOG_FUNC_END 
 
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 

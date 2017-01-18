@@ -127,7 +127,13 @@ XBSYSAPI EXPORTNUM(194) NTSTATUS NTAPI NtCreateTimer
 	IN TIMER_TYPE TimerType
 );
 
-XBSYSAPI VOID *NtDeleteFile;
+// ******************************************************************
+// * 0x00C3 - NtDeleteFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(195) NTSTATUS NTAPI NtDeleteFile
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
 
 // ******************************************************************
 // * 0x00C4 - NtDeviceIoControlFile
@@ -263,7 +269,15 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
 );
 
 XBSYSAPI VOID *NtQueryDirectoryObject;
-XBSYSAPI VOID *NtQueryEvent;
+
+// ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) NTSTATUS NTAPI NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+);
 
 // ******************************************************************
 // * NtQueryFullAttributesFile
@@ -291,8 +305,24 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
 );
 
 XBSYSAPI VOID *NtQueryIoCompletion;
-XBSYSAPI VOID *NtQueryMutant;
-XBSYSAPI VOID *NtQuerySemaphore;
+
+// ******************************************************************
+// * 0x00D5 - NtQueryMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(213) NTSTATUS NTAPI NtQueryMutant
+(
+	IN HANDLE MutantHandle,
+	OUT PMUTANT_BASIC_INFORMATION MutantInformation
+);
+
+// ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) NTSTATUS NTAPI NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+);
 
 // ******************************************************************
 // * 0x00D7 - NtQuerySymbolicLinkObject()

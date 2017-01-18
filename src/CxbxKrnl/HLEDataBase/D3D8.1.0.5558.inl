@@ -129,7 +129,8 @@ OOVPA_END;
 OOVPA_NO_XREF(IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558, 11)
 
         // IDirect3DDevice8_SetVertexShaderConstant1+0x05 : add eax, 0x1C
-        /*{ 0x05, 0x83 }, // (Offset,Value)-Pair #1
+        /*
+        { 0x05, 0x83 }, // (Offset,Value)-Pair #1
         { 0x06, 0xC0 }, // (Offset,Value)-Pair #2
         { 0x07, 0x1C }, // (Offset,Value)-Pair #3
 
@@ -148,22 +149,22 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558, 11)
         // IDirect3DDevice8_SetVertexShaderConstant1+0x47 : jmp +0xB7
         { 0x47, 0xEB }, // (Offset,Value)-Pair #10
         { 0x48, 0xB7 }, // (Offset,Value)-Pair #11
-		*/
+	*/
 
-		// IDirect3DDevice8_SetVertexShaderConstant1+0x06 : add eax, 0x1C
+	// IDirect3DDevice8_SetVertexShaderConstant1+0x06 : add eax, 0x1C
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0xC0 }, // (Offset,Value)-Pair #2
         { 0x08, 0x1C }, // (Offset,Value)-Pair #3
 
-		{ 0x16, 0xC7 },
-		{ 0x17, 0x40 },
-		{ 0x18, 0xE4 },
-		{ 0x19, 0xA4 },
-		{ 0x1A, 0x1E },
-		{ 0x1B, 0x04 },
-		{ 0x1C, 0x00 },
+	{ 0x16, 0xC7 },
+	{ 0x17, 0x40 },
+	{ 0x18, 0xE4 },
+	{ 0x19, 0xA4 },
+	{ 0x1A, 0x1E },
+	{ 0x1B, 0x04 },
+	{ 0x1C, 0x00 },
 
-		// IDirect3DDevice8_SetVertexShaderConstant1+0x53 : retn
+	// IDirect3DDevice8_SetVertexShaderConstant1+0x53 : retn
         { 0x53, 0xC3 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
@@ -994,21 +995,21 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3D_MakeRequestedSpace_1_0_5558, 12)
 
-		// D3D::MakeRequestedSpace+0x08: test byte ptr [esi+8], 4
-		{ 0x08, 0xF6 },
-		{ 0x09, 0x46 },
-		{ 0x0A, 0x08 },
-		{ 0x0B, 0x04 },
-		// D3D::MakeRequestedSpace+0x32: retn 8
-		{ 0x32, 0xC2 },
-		{ 0x33, 0x08 },
-		// D3D::MakeRequestedSpace+0x57: add ebp, 0x4000
-		{ 0x57, 0x81 },
-		{ 0x58, 0xC5 },
-		{ 0x59, 0x00 },
-		{ 0x5A, 0x40 },
-		{ 0x5B, 0x00 },
-		{ 0x5C, 0x00 },
+	// D3D::MakeRequestedSpace+0x08: test byte ptr [esi+8], 4
+	{ 0x08, 0xF6 },
+	{ 0x09, 0x46 },
+	{ 0x0A, 0x08 },
+	{ 0x0B, 0x04 },
+	// D3D::MakeRequestedSpace+0x32: retn 8
+	{ 0x32, 0xC2 },
+	{ 0x33, 0x08 },
+	// D3D::MakeRequestedSpace+0x57: add ebp, 0x4000
+	{ 0x57, 0x81 },
+	{ 0x58, 0xC5 },
+	{ 0x59, 0x00 },
+	{ 0x5A, 0x40 },
+	{ 0x5B, 0x00 },
+	{ 0x5C, 0x00 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1051,7 +1052,7 @@ OOVPA_NO_XREF(D3DTexture_LockRect_1_0_5558, 8)
         { 0x0D, 0x8B },
         { 0x12, 0x8B },
         { 0x17, 0x50 },
-		{ 0x1B, 0xE8 },
+	{ 0x1B, 0xE8 },
         { 0x20, 0xC2 },
         { 0x21, 0x14 },
 OOVPA_END;
@@ -1566,8 +1567,6 @@ OOVPATable D3D8_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateTexture2_1_0_5558, XTL::EmuIDirect3DDevice8_CreateTexture2),
 	// IDirect3DDevice8::GetDisplayMode (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDisplayMode_1_0_4627, XTL::EmuIDirect3DDevice8_GetDisplayMode),
-	// IDirect3DDevice8::SetVertexData2f (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData2f_1_0_4627, XTL::EmuIDirect3DDevice8_SetVertexData2f),
 	// IDirect3DDevice8::End
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_End_1_0_5558, XTL::EmuIDirect3DDevice8_End),
 	// IDirect3DDevice8::SetTextureState_TexCoordIndex (* unchanged since 4627 *)
@@ -1616,8 +1615,8 @@ OOVPATable D3D8_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_5558, XTL::EmuIDirect3DDevice8_SetVertexShader),
 	// IDirect3DDevice8::SetIndices
 	OOVPA_TABLE_PATCH(D3DDevice_SetIndices_1_0_5558, XTL::EmuIDirect3DDevice8_SetIndices),
-	 // IDirect3DDevice8::SetIndices
-	OOVPA_TABLE_PATCH(D3DDevice_SetIndices_1_0_5455, XTL::EmuIDirect3DDevice8_SetIndices),
+	//// IDirect3DDevice8::SetIndices
+	// TODO : Move to OOVPATable D3D8_1_0_5455 : OOVPA_TABLE_PATCH(D3DDevice_SetIndices_1_0_5455, XTL::EmuIDirect3DDevice8_SetIndices),
 	// IDirect3DDevice8::SetTexture (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_5233, XTL::EmuIDirect3DDevice8_SetTexture),
 	// IDirect3DDevice8::SwitchTexture (* unchanged since 4361 *)
