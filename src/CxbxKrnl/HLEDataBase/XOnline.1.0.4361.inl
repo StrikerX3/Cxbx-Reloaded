@@ -35,13 +35,13 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup_1_0_4361, 8,
+OOVPA_XREF(XNetStartup, 4361, 8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // XNetStartup+0x0F : call [XnInit]
-        { 0x10, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : xor eax, eax
         { 0x00, 0x33 }, // (Offset,Value)-Pair #2
@@ -64,13 +64,13 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup_1_0_4361, 9,
+OOVPA_XREF(WSAStartup, 4361, 9,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // WSAStartup+0x0F : call [XnInit]
-        { 0x14, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x14, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x00 : push [esp+0x08]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #2
@@ -88,7 +88,7 @@ OOVPA_END;
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_4361, 10,
+OOVPA_XREF(XnInit, 4361, 10,
 
     XREF_XNINIT,
     XRefZero)
@@ -113,7 +113,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF(socket_1_0_4361, 9)
+OOVPA_NO_XREF(socket, 4361, 9)
 
         // socket+0x10 : push 0x276D
         { 0x10, 0x68 }, // (Offset,Value)-Pair #1
@@ -134,7 +134,7 @@ OOVPA_END;
 // ******************************************************************
 // * bind
 // ******************************************************************
-OOVPA_NO_XREF(bind_1_0_4361, 10)
+OOVPA_NO_XREF(bind, 4361, 10)
 
         // bind+0x11 : push 0x276D
         { 0x11, 0x68 }, // (Offset,Value)-Pair #1
@@ -158,7 +158,7 @@ OOVPA_END;
 // ******************************************************************
 // * listen
 // ******************************************************************
-OOVPA_NO_XREF(listen_1_0_4361, 9)
+OOVPA_NO_XREF(listen, 4361, 9)
 
         // listen+0x10 : push 0x276D
         { 0x10, 0x68 }, // (Offset,Value)-Pair #1
@@ -181,7 +181,7 @@ OOVPA_END;
 // ******************************************************************
 // * ioctlsocket
 // ******************************************************************
-OOVPA_NO_XREF(ioctlsocket_1_0_4361, 10)
+OOVPA_NO_XREF(ioctlsocket, 4361, 10)
 
         // ioctlsocket+0x12 : push 0x276D
         { 0x12, 0x68 }, // (Offset,Value)-Pair #1
@@ -203,27 +203,20 @@ OOVPA_NO_XREF(ioctlsocket_1_0_4361, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * XOnline_1_0_4361
+// * XOnline_4361
 // ******************************************************************
-OOVPATable XOnline_1_0_4361[] = {
+OOVPATable XOnline_4361[] = {
 
-    // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XTL::EmuXNetStartup),
-	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, XTL::EmuWSAStartup),
-    // XnInit (XREF)
-	OOVPA_TABLE_XREF(XnInit_1_0_4361),
-	// socket
-	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
-	// bind
-	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
-	// listen
-	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten)),
-	// ioctlsocket
-	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
+	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
+	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
+	REGISTER_OOVPA(XnInit, 4361, XREF),
+	REGISTER_OOVPA(socket, 4361, EMUTHIS),
+	REGISTER_OOVPA(bind, 4361, EMUTHIS),
+	REGISTER_OOVPA(listen, 4361, EMUTHIS),
+	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
 };
 
 // ******************************************************************
-// * XOnline_1_0_4361_SIZE
+// * XOnline_4361_SIZE
 // ******************************************************************
-uint32 XOnline_1_0_4361_SIZE = sizeof(XOnline_1_0_4361);
+uint32 XOnline_4361_SIZE = sizeof(XOnline_4361);

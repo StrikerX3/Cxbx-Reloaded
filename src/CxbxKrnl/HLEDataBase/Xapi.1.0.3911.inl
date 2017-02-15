@@ -35,7 +35,7 @@
 // ******************************************************************
 // * GetExitCodeThread
 // ******************************************************************
-OOVPA_NO_XREF(GetExitCodeThread_1_0_3911, 11)
+OOVPA_NO_XREF(GetExitCodeThread, 3911, 11)
 
         // GetExitCodeThread+0x03 : lea eax, [ebp+0x08]
         { 0x03, 0x8D }, // (Offset,Value)-Pair #1
@@ -63,7 +63,7 @@ OOVPA_END;
 // * NOTE: We are actually intercepting USBD_Init, because
 // *       XInitDevices Simply redirects to that function
 // ******************************************************************
-OOVPA_NO_XREF(XInitDevices_1_0_3911, 10)
+OOVPA_NO_XREF(XInitDevices, 3911, 10)
 
         // XInitDevices+0x03 : push 0xB4
         { 0x03, 0x68 }, // (Offset,Value)-Pair #1
@@ -87,7 +87,7 @@ OOVPA_END;
 // ******************************************************************
 // * CreateMutex
 // ******************************************************************
-OOVPA_NO_XREF(CreateMutex_1_0_3911, 13)
+OOVPA_NO_XREF(CreateMutex, 3911, 13)
 
         // CreateMutex+0x03 : sub esp, 0x14
         { 0x03, 0x83 }, // (Offset,Value)-Pair #1
@@ -114,7 +114,7 @@ OOVPA_END;
 // ******************************************************************
 // * CreateThread
 // ******************************************************************
-OOVPA_NO_XREF(CreateThread_1_0_3911, 8)
+OOVPA_NO_XREF(CreateThread, 3911, 8)
 
         // CreateThread+0x0A : mov eax, ds:10130h
         { 0x0A, 0xA1 }, // (Offset,Value)-Pair #1
@@ -134,7 +134,7 @@ OOVPA_END;
 // ******************************************************************
 // * SetThreadPriority
 // ******************************************************************
-OOVPA_NO_XREF(SetThreadPriority_1_0_3911, 10)
+OOVPA_NO_XREF(SetThreadPriority, 3911, 10)
 
         // SetThreadPriority+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
@@ -158,7 +158,7 @@ OOVPA_END;
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-OOVPA_NO_XREF(XapiInitProcess_1_0_3911, 7)
+OOVPA_NO_XREF(XapiInitProcess, 3911, 7)
 
         // XapiInitProcess+0x03 : sub esp, 30h
         { 0x05, 0x30 }, // (Offset,Value)-Pair #1
@@ -179,7 +179,7 @@ OOVPA_END;
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-OOVPA_NO_XREF(XapiInitProcess_1_0_3950, 7)
+OOVPA_NO_XREF(XapiInitProcess, 3950, 7)
 
         // XapiInitProcess+0x03 : sub esp, 30h
         { 0x05, 0x30 }, // (Offset,Value)-Pair #1
@@ -200,7 +200,7 @@ OOVPA_END;
 // ******************************************************************
 // * XapiBootDash
 // ******************************************************************
-OOVPA_NO_XREF(XapiBootDash_1_0_3911, 11)
+OOVPA_NO_XREF(XapiBootDash, 3911, 11)
 
         // XapiBootDash+0x03 : sub esp, 0x0C00
         { 0x03, 0x81 }, // (Offset,Value)-Pair #1
@@ -225,7 +225,7 @@ OOVPA_END;
 // ******************************************************************
 // * XRegisterThreadNotifyRoutine
 // ******************************************************************
-OOVPA_NO_XREF(XRegisterThreadNotifyRoutine_1_0_3911, 11)
+OOVPA_NO_XREF(XRegisterThreadNotifyRoutine, 3911, 11)
 
         // XRegisterThreadNotifyRoutine+0x0D : cmp [esp+0x0C], 0
         { 0x0D, 0x83 }, // (Offset,Value)-Pair #1
@@ -250,7 +250,7 @@ OOVPA_END;
 // ******************************************************************
 // * GetTimeZoneInformation
 // ******************************************************************
-OOVPA_NO_XREF(GetTimeZoneInformation_1_0_3911, 7)
+OOVPA_NO_XREF(GetTimeZoneInformation, 3911, 7)
 
         { 0x05, 0x28 },
         { 0x2E, 0x28 },
@@ -265,7 +265,7 @@ OOVPA_END;
 // ******************************************************************
 // * XCalculateSignatureBegin
 // ******************************************************************
-OOVPA_NO_XREF(XCalculateSignatureBegin_1_0_3911, 10)
+OOVPA_NO_XREF(XCalculateSignatureBegin, 3911, 10)
 
         // XCalculateSignatureBegin+0x01 : push 0x7C; push 0
         { 0x01, 0x6A }, // (Offset,Value)-Pair #1
@@ -290,7 +290,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetDevices
 // ******************************************************************
-OOVPA_NO_XREF(XGetDevices_1_0_3911, 14)
+OOVPA_NO_XREF(XGetDevices, 3911, 14)
 
         // XGetDevices+0x07 : mov edx, [esp+arg_0]
         { 0x07, 0x8B }, // (Offset,Value)-Pair #1
@@ -320,7 +320,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-OOVPA_NO_XREF(XGetDeviceChanges_1_0_3911, 8)
+OOVPA_NO_XREF(XGetDeviceChanges, 3911, 8)
 
         // XGetDeviceChanges+0x07 : xor eax, eax
         { 0x07, 0x33 }, // (Offset,Value)-Pair #1
@@ -342,7 +342,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputOpen
 // ******************************************************************
-OOVPA_NO_XREF(XInputOpen_1_0_3911, 11)
+OOVPA_NO_XREF(XInputOpen, 3911, 11)
 
         // XInputOpen+0x20 : jmp +0x0B
         { 0x20, 0xEB }, // (Offset,Value)-Pair #1
@@ -369,7 +369,7 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice_1_0_3911, 10,
+OOVPA_XREF(XID_fCloseDevice, 3911, 10,
 
     XREF_FCLOSEDEVICE,
     XRefZero)
@@ -396,13 +396,13 @@ OOVPA_END;
 // ******************************************************************
 // * XInputClose
 // ******************************************************************
-OOVPA_XREF(XInputClose_1_0_3911, 8,
+OOVPA_XREF(XInputClose, 3911, 8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // XInputClose+0x05 : call [fCloseDevice]
-        { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ),  // (Offset,Value)-Pair #1
 
         // XInputClose+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -421,7 +421,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities_1_0_3911, 14)
+OOVPA_NO_XREF(XInputGetCapabilities, 3911, 14)
 
         // XInputGetCapabilities+0x03 : sub esp, 0x48
         { 0x03, 0x83 }, // (Offset,Value)-Pair #1
@@ -451,7 +451,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetState_1_0_3911, 13)
+OOVPA_NO_XREF(XInputGetState, 3911, 13)
 
         // XInputGetState+0x0E : cmp byte ptr [edx+0x0A3], 1
         { 0x0E, 0x80 }, // (Offset,Value)-Pair #1
@@ -480,7 +480,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputSetState
 // ******************************************************************
-OOVPA_NO_XREF(XInputSetState_1_0_3911, 12)
+OOVPA_NO_XREF(XInputSetState, 3911, 12)
 
         // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
         { 0x04, 0x8D }, // (Offset,Value)-Pair #1
@@ -508,7 +508,7 @@ OOVPA_END;
 // ******************************************************************
 // * SetThreadPriorityBoost
 // ******************************************************************
-OOVPA_NO_XREF(SetThreadPriorityBoost_1_0_3911, 10)
+OOVPA_NO_XREF(SetThreadPriorityBoost, 3911, 10)
 
         // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
@@ -532,7 +532,7 @@ OOVPA_END;
 // ******************************************************************
 // * GetThreadPriority
 // ******************************************************************
-OOVPA_NO_XREF(GetThreadPriority_1_0_3911, 10)
+OOVPA_NO_XREF(GetThreadPriority, 3911, 10)
 
         // GetThreadPriority+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
@@ -556,7 +556,7 @@ OOVPA_END;
 //// ******************************************************************
 //// * XGetDevices
 //// ******************************************************************
-//OOVPA_NO_XREF(XGetDevices_1_0_3911, 14)
+//OOVPA_NO_XREF(XGetDevices, 3911, 14)
 //
 //        // XGetDevices+0x07 : mov edx, [esp+arg_0]
 //        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
@@ -586,7 +586,7 @@ OOVPA_END;
 // ******************************************************************
 // * CreateFiber
 // ******************************************************************
-OOVPA_NO_XREF(CreateFiber_1_0_3911, 11)
+OOVPA_NO_XREF(CreateFiber, 3911, 11)
 
 		// CreateFiber+0x11 : mov ecx, 0x3000
 		{ 0x11, 0xB9 },
@@ -607,7 +607,7 @@ OOVPA_END;
 // ******************************************************************
 // * DeleteFiber
 // ******************************************************************
-OOVPA_NO_XREF(DeleteFiber_1_0_3911, 9)
+OOVPA_NO_XREF(DeleteFiber, 3911, 9)
 
 		// DeleteFiber+0x0A : call ds:MmDeleteKernelStack
 		{ 0x0A, 0xFF },
@@ -626,7 +626,7 @@ OOVPA_END;
 // ******************************************************************
 // * SwitchToFiber
 // ******************************************************************
-OOVPA_NO_XREF(SwitchToFiber_1_0_3911, 8)
+OOVPA_NO_XREF(SwitchToFiber, 3911, 8)
 
         { 0x06, 0x64 },
         { 0x0E, 0x44 },
@@ -641,7 +641,7 @@ OOVPA_END;
 // ******************************************************************
 // * ConvertThreadToFiber
 // ******************************************************************
-OOVPA_NO_XREF(ConvertThreadToFiber_1_0_3911, 7)
+OOVPA_NO_XREF(ConvertThreadToFiber, 3911, 7)
 
         { 0x05, 0x64 },
         { 0x0C, 0x8B },
@@ -655,7 +655,7 @@ OOVPA_END;
 //// ******************************************************************
 //// * XInputGetCapabilities
 //// ******************************************************************
-//OOVPA_NO_XREF(XInputGetCapabilities_1_0_3911, 14)
+//OOVPA_NO_XREF(XInputGetCapabilities, 3911, 14)
 //
 //        // XInputGetCapabilities+0x03 : sub esp, 0x48
 //        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
@@ -685,7 +685,7 @@ OOVPA_END;
 // ******************************************************************
 // * SignalObjectAndWait
 // ******************************************************************
-OOVPA_NO_XREF(SignalObjectAndWait_1_0_3911, 8)
+OOVPA_NO_XREF(SignalObjectAndWait, 3911, 8)
 
         { 0x07, 0x75 },
         { 0x12, 0x8B },
@@ -700,7 +700,7 @@ OOVPA_END;
 // ******************************************************************
 // * QueueUserAPC
 // ******************************************************************
-OOVPA_NO_XREF(QueueUserAPC_1_0_3911, 7)
+OOVPA_NO_XREF(QueueUserAPC, 3911, 7)
 
         { 0x03, 0x74 },
         { 0x08, 0x24 },
@@ -714,7 +714,7 @@ OOVPA_END;
 // ******************************************************************
 // * lstrcmpiW
 // ******************************************************************
-OOVPA_NO_XREF(lstrcmpiW_1_0_3911, 8)
+OOVPA_NO_XREF(lstrcmpiW, 3911, 8)
 
         { 0x07, 0x56 },
         { 0x0F, 0x01 },
@@ -729,7 +729,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
-OOVPA_NO_XREF(XMountAlternateTitleA_1_0_3911, 7)
+OOVPA_NO_XREF(XMountAlternateTitleA, 3911, 7)
 
         { 0x1E, 0x0F },
         { 0x3E, 0x56 },
@@ -743,7 +743,7 @@ OOVPA_END;
 // ******************************************************************
 // * XUnmountAlternateTitleA
 // ******************************************************************
-OOVPA_NO_XREF(XUnmountAlternateTitleA_1_0_3911, 7)
+OOVPA_NO_XREF(XUnmountAlternateTitleA, 3911, 7)
 
         { 0x0A, 0x65 },
         { 0x16, 0xFF },
@@ -757,7 +757,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMUA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMUA_1_0_3911, 7)
+OOVPA_NO_XREF(XMountMUA, 3911, 7)
 
         { 0x1E, 0x0C },
         { 0x3E, 0x66 },
@@ -771,7 +771,7 @@ OOVPA_END;
 // ******************************************************************
 // * CloseHandle
 // ******************************************************************
-OOVPA_NO_XREF(CloseHandle_1_0_3911, 8)
+OOVPA_NO_XREF(CloseHandle, 3911, 8)
 
         { 0x02, 0x24 },
         { 0x03, 0x04 },
@@ -786,7 +786,7 @@ OOVPA_END;
 // ******************************************************************
 // * ExitThread
 // ******************************************************************
-OOVPA_NO_XREF(ExitThread_1_0_3911, 5)
+OOVPA_NO_XREF(ExitThread, 3911, 5)
 
         { 0x01, 0x00 },
         { 0x07, 0xFF },
@@ -798,7 +798,7 @@ OOVPA_END;
 // ******************************************************************
 // * XLaunchNewImageA
 // ******************************************************************
-OOVPA_NO_XREF(XLaunchNewImageA_1_0_3911, 8)
+OOVPA_NO_XREF(XLaunchNewImageA, 3911, 8)
 
         { 0x1E, 0x80 },
         { 0x3E, 0xC0 },
@@ -813,7 +813,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetLaunchInfo
 // ******************************************************************
-OOVPA_NO_XREF(XGetLaunchInfo_1_0_3911, 7)
+OOVPA_NO_XREF(XGetLaunchInfo, 3911, 7)
 
         { 0x0B, 0x8B },
         { 0x18, 0x15 },
@@ -828,7 +828,7 @@ OOVPA_END;
 // * XGetSectionHandleA
 //	558BEC83EC10538B1D........5657FF75088D45F050FFD38B351C0101008B3D
 // ******************************************************************
-OOVPA_NO_XREF(XGetSectionHandleA_1_0_3911, 12)
+OOVPA_NO_XREF(XGetSectionHandleA, 3911, 12)
 
 		{ 0x00, 0x55 },
 		{ 0x01, 0x8B },
@@ -849,7 +849,7 @@ OOVPA_END;
 // * XLoadSectionByHandle
 //  568B74240856FF15........85C07D0A50E8........33C0EB038B46045EC204
 // ******************************************************************
-OOVPA_NO_XREF(XLoadSectionByHandle_1_0_3911, 11)
+OOVPA_NO_XREF(XLoadSectionByHandle, 3911, 11)
 
 		// XLoadSectionByHandle+0x01 : mov esi, [esp+4+arg_0]
 		{ 0x01, 0x8B },
@@ -875,7 +875,7 @@ OOVPA_END;
 // * XFreeSectionByHandle
 // FF742404FF15........85C07D0A50E8........33C0EB0333C040C20400....
 // ******************************************************************
-OOVPA_NO_XREF(XFreeSectionByHandle_1_0_3911, 11)
+OOVPA_NO_XREF(XFreeSectionByHandle, 3911, 11)
 
 		// XFreeSectionByHandle+0x00 : push esp
 		{ 0x00, 0xFF },
@@ -902,7 +902,7 @@ OOVPA_END;
 // ******************************************************************
 // * XAutoPowerDownResetTimer
 // ******************************************************************
-OOVPA_NO_XREF(XAutoPowerDownResetTimer_1_0_3911, 6)
+OOVPA_NO_XREF(XAutoPowerDownResetTimer, 3911, 6)
 
         { 0x02, 0x59 },
         { 0x08, 0x51 },
@@ -915,7 +915,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMURootA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMURootA_1_0_3911, 7)
+OOVPA_NO_XREF(XMountMURootA, 3911, 7)
 
         { 0x1E, 0x0C },
         { 0x3E, 0x00 },
@@ -929,7 +929,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
-OOVPA_NO_XREF(XMountUtilityDrive_1_0_3911, 7)
+OOVPA_NO_XREF(XMountUtilityDrive, 3911, 7)
 
         { 0x1C, 0x85 },
         { 0x3A, 0x8D },
@@ -943,7 +943,7 @@ OOVPA_END;
 // ******************************************************************
 // * ReadFileEx@20
 // ******************************************************************
-OOVPA_NO_XREF(ReadFileEx_1_0_3911, 8)
+OOVPA_NO_XREF(ReadFileEx, 3911, 8)
 
         { 0x09, 0x48 },
         { 0x14, 0x8D },
@@ -958,7 +958,7 @@ OOVPA_END;
 // ******************************************************************
 // * WriteFileEx
 // ******************************************************************
-OOVPA_NO_XREF(WriteFileEx_1_0_3911, 8)
+OOVPA_NO_XREF(WriteFileEx, 3911, 8)
 
         { 0x09, 0x48 },
         { 0x14, 0x8D },
@@ -971,101 +971,50 @@ OOVPA_NO_XREF(WriteFileEx_1_0_3911, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XAPI_1_0_3911
+// * XAPI_3911
 // ******************************************************************
-OOVPATable XAPI_1_0_3911[] = {
+OOVPATable XAPI_3911[] = {
 
-    // GetExitCodeThread
-	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, XTL::EmuGetExitCodeThread),
-    //*/
-    // XInitDevices
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices), /* Too High Level
-    // CreateMutex
-	OOVPA_TABLE_PATCH(CreateMutex_1_0_3911, XTL::EmuCreateMutex), //*/
-    /* Too High Level */
-    // CreateThread
-    /*
-	OOVPA_TABLE_PATCH(CreateThread_1_0_3911, XTL::EmuCreateThread),
-	*/
-    // SetThreadPriority
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority), //*/
-    // GetTimeZoneInformation
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
-    // XRegisterThreadNotifyRoutine
-	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
-    /*
-    // XCalculateSignatureBegin
-	OOVPA_TABLE_PATCH(XCalculateSignatureBegin_1_0_3911, XTL::EmuXCalculateSignatureBegin),
-    */
-    // XGetDevices
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
-    // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XTL::EmuXGetDeviceChanges),
-    // XInputOpen
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_3911, XTL::EmuXInputOpen),
-    // XID_fCloseDevice
-	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_3911),
-    // XInputClose
-	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XTL::EmuXInputClose),
-    // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
-    // XInputGetState
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_3911, XTL::EmuXInputGetState),
-    // XInputSetState
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_3911, XTL::EmuXInputSetState),
-	// SetThreadPriorityBoost
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_3911, XTL::EmuSetThreadPriorityBoost),
-	// GetThreadPriority
-	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_3911, XTL::EmuGetThreadPriority),
-	// CreateFiber
-	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, XTL::EmuCreateFiber),
-	// DeleteFiber
-	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
-	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_3911, XTL::EmuSwitchToFiber),
-	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_3911, XTL::EmuConvertThreadToFiber),
-	// SignalObjectAndWait
-	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
-	// QueueUserAPC
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// lstrcmpiW
-	/*
-	OOVPA_TABLE_PATCH(lstrcmpiW_1_0_3911, XTL::EmulstrcmpiW),
-	*/
-	// XMountAlternateTitleA
-	OOVPA_TABLE_PATCH(XMountAlternateTitleA_1_0_3911, XTL::EmuXMountAlternateTitle),
-	// XUnmountAlternateTitleA
-	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA_1_0_3911, XTL::EmuXUnmountAlternateTitle),
-	// XMountMUA
-	OOVPA_TABLE_PATCH(XMountMUA_1_0_3911, XTL::EmuXMountMUA),
-	// XLaunchNewImageA
-	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_3911, XTL::EmuXLaunchNewImage),
-	// XGetLaunchInfo
-	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_3911, XTL::EmuXGetLaunchInfo),
-	// XAutoPowerDownResetTimer
-	OOVPA_TABLE_PATCH(XAutoPowerDownResetTimer_1_0_3911, XTL::EmuXAutoPowerDownResetTimer),
-	// XMountMURootA
-	OOVPA_TABLE_PATCH(XMountMURootA_1_0_3911, XTL::EmuXMountMURootA),
-	// XMountUtilityDrive
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_3911, XTL::EmuXMountUtilityDrive),
-	// ReadFileEx
-	/*
-	OOVPA_TABLE_PATCH(ReadFileEx_1_0_3911, XTL::EmuReadFileEx),
-	// WriteFileEx
-	OOVPA_TABLE_PATCH(WriteFileEx_1_0_3911, XTL::EmuWriteFileEx),
-	*/
-	// CloseHandle
-    /*
-	OOVPA_TABLE_PATCH(CloseHandle_1_0_3911, XTL::EmuCloseHandle),
-	*/
-	// ExitThread
-    /*
-	OOVPA_TABLE_PATCH(ExitThread_1_0_3911, XTL::EmuExitThread),
-	*/
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH), 
+    // REGISTER_OOVPA(CreateMutex, 3911, PATCH), // Too High Level
+    // REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH), //*/
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+    // REGISTER_OOVPA(XCalculateSignatureBegin, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 3911, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
+	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
+	// REGISTER_OOVPA(lstrcmpiW, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitle, 3911, ALIAS, XMountAlternateTitleA),
+	REGISTER_OOVPA(XUnmountAlternateTitle, 3911, ALIAS, XUnmountAlternateTitleA),
+	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
+	REGISTER_OOVPA(XLaunchNewImage, 3911, ALIAS, XLaunchNewImageA),
+	REGISTER_OOVPA(XGetLaunchInfo, 3911, PATCH),
+	REGISTER_OOVPA(XAutoPowerDownResetTimer, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 3911, PATCH),
+	// REGISTER_OOVPA(ReadFileEx, 3911, PATCH),
+	// REGISTER_OOVPA(WriteFileEx, 3911, PATCH),
+	// REGISTER_OOVPA(CloseHandle, 3911, PATCH),
+	// REGISTER_OOVPA(ExitThread, 3911, PATCH),
 };
 
 // ******************************************************************
-// * XAPI_1_0_3911_SIZE
+// * XAPI_3911_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_3911_SIZE = sizeof(XAPI_1_0_3911);
+uint32 XAPI_3911_SIZE = sizeof(XAPI_3911);

@@ -33,54 +33,31 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XAPI_1_0_4721
+// * XAPI_4721
 // ******************************************************************
-OOVPATable XAPI_1_0_4721[] = {
-	/*
-    // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    obsolete OOVPA_TABLE_PATCH(RtlCreateHeap_1_0_3911, XTL::EmuRtlCreateHeap),
-    // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    obsolete OOVPA_TABLE_PATCH(RtlAllocateHeap_1_0_3911, XTL::EmuRtlAllocateHeap),
-	// RtlReAllocateHeap
-    obsolete OOVPA_TABLE_PATCH(RtlReAllocateHeap_1_0_4627, XTL::EmuRtlReAllocateHeap),
-    // RtlFreeHeap
-    obsolete OOVPA_TABLE_PATCH(RtlFreeHeap_1_0_4627, XTL::EmuRtlFreeHeap),
-    // RtlSizeHeap
-    obsolete OOVPA_TABLE_PATCH(RtlSizeHeap_1_0_4627, XTL::EmuRtlSizeHeap),
-	// RtlDestroyHeap
-	obsolete OOVPA_TABLE_PATCH(RtlDestroyHeap_1_0_4627, XTL::EmuRtlDestroyHeap),
-	*/
-    // XMountUtilityDrive
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
-    // XInitDevices (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
-    // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
-    // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
-    // XInputGetCapabilities (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XTL::EmuXInputGetCapabilities),
-    // XInputGetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XTL::EmuXInputGetState),
-    // XInputSetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XTL::EmuXInputSetState),
-	// XID_fCloseDevice (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4361),
-	// XInputClose (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XTL::EmuXInputClose),
-	// XInputClose (* unchanged since 1.0.4361 *)
-	// OOVPA_TABLE_PATCH(XInputClose_1_0_4361, XTL::EmuXInputClose),
-    // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup),
-    //* Too High Level
-    // XapiInitProcess (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_PATCH(XapiInitProcess_1_0_4361, XTL::EmuXapiInitProcess),
-    //*/
-    // XapiBootToDash (* unchanged since 1.0.3911 *)
-    /* obsolete OOVPA_TABLE_PATCH(XapiBootDash_1_0_3911, XTL::EmuXapiBootDash),*/
+OOVPATable XAPI_4721[] = {
+    // REGISTER_OOVPA(RtlCreateHeap, 3911, PATCH), // obsolete, (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // REGISTER_OOVPA(RtlAllocateHeap, 3911, PATCH), // obsolete (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // REGISTER_OOVPA(RtlReAllocateHeap, 4627, PATCH), // obsolete 
+    // REGISTER_OOVPA(RtlFreeHeap, 4627, PATCH), // obsolete 
+    // REGISTER_OOVPA(RtlSizeHeap, 4627, PATCH), // obsolete 
+	// REGISTER_OOVPA(RtlDestroyHeap, 4627, PATCH), // obsolete 
+	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
+	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	// REGISTER_OOVPA(XInputClose, 4361, PATCH),
+	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete 
+	// REGISTER_OOVPA(XapiInitProcess, 4361, PATCH), // obsolete, Too High Level
+    // REGISTER_OOVPA(XapiBootDash, 3911, PATCH), // obsolete 
 };
 
 // ******************************************************************
-// * XAPI_1_0_4721_SIZE
+// * XAPI_4721_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_4721_SIZE = sizeof(XAPI_1_0_4721);
+uint32 XAPI_4721_SIZE = sizeof(XAPI_4721);

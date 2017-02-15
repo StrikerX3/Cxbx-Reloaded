@@ -42,6 +42,7 @@
 #include "HLEDataBase/Xapi.1.0.4627.h"
 #include "HLEDataBase/Xapi.1.0.5233.h"
 #include "HLEDataBase/Xapi.1.0.5558.h"
+#include "HLEDataBase/Xapi.1.0.5788.h"
 #include "HLEDataBase/Xapi.1.0.5849.h"
 #include "HLEDataBase/D3D8.1.0.3925.h"
 #include "HLEDataBase/D3D8.1.0.4034.h"
@@ -51,6 +52,7 @@
 #include "HLEDataBase/D3D8.1.0.4627.h"
 #include "HLEDataBase/D3D8.1.0.5233.h"
 #include "HLEDataBase/D3D8.1.0.5558.h"
+#include "HLEDataBase/D3D8.1.0.5788.h"
 #include "HLEDataBase/D3D8.1.0.5849.h"
 #include "HLEDataBase/D3D8LTCG.1.0.5849.h"
 #include "HLEDataBase/DSound.1.0.3936.h"
@@ -60,6 +62,7 @@
 #include "HLEDataBase/DSound.1.0.4627.h"
 #include "HLEDataBase/DSound.1.0.5233.h"
 #include "HLEDataBase/DSound.1.0.5558.h"
+#include "HLEDataBase/DSound.1.0.5788.h"
 #include "HLEDataBase/DSound.1.0.5849.h"
 #include "HLEDataBase/XG.1.0.3911.h"
 #include "HLEDataBase/XG.1.0.4034.h"
@@ -68,12 +71,14 @@
 #include "HLEDataBase/XG.1.0.4627.h"
 #include "HLEDataBase/XG.1.0.5233.h"
 #include "HLEDataBase/XG.1.0.5558.h"
+#include "HLEDataBase/XG.1.0.5788.h"
 #include "HLEDataBase/XG.1.0.5849.h"
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
 #include "HLEDataBase/XOnline.1.0.4627.h"
 #include "HLEDataBase/XOnline.1.0.5233.h"
 #include "HLEDataBase/XOnline.1.0.5558.h"
+#include "HLEDataBase/XOnline.1.0.5788.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
 
@@ -285,6 +290,7 @@ enum XRefDataBaseOffset
 	XREF_DirectSound_CDirectSoundStream_SetFilter,
 	XREF_DirectSound_CDirectSoundBuffer_StopEx,
 	XREF_CMcpxBuffer_Stop2,
+	XREF_CMcpxBuffer_PlayA,
 	XREF_CMcpxAPU_Set3dDopplerFactor,
 	XREF_CSensaura3d_GetFullHRTFFilterPair,
 	XREF_CDirectSound_GetCaps,
@@ -330,14 +336,15 @@ enum XRefDataBaseOffset
 //	XREF_XFreeSectionByHandle,
 
 	XREF_COUNT // XREF_COUNT must always be last.
-	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
+	// Also, if XREF_COUNT > sizeof(uint16), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
-#define XREF_UNKNOWN -1
+#define XREF_ADDR_UNDETERMINED -1
+#define XREF_ADDR_NOT_FOUND ((xbaddr)nullptr)
 
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[XREF_COUNT];
+extern xbaddr XRefDataBase[XREF_COUNT];
 
 #endif /*HLEDATABASE_H*/

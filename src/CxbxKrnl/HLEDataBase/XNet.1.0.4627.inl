@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF_LARGE(XnInit_1_0_4627, 18, 
+OOVPA_XREF(XnInit, 4627, 18, 
 
     XREF_XNINIT,
 	XRefZero)
@@ -54,10 +54,10 @@ OOVPA_XREF_LARGE(XnInit_1_0_4627, 18,
         { 0x001A, 0xB1 }, // (Offset,Value)-Pair #7
         { 0x001B, 0x11 }, // (Offset,Value)-Pair #8
 
-        // XnInit+0x0041 : push 0x0AF8
-        { 0x0041, 0x68 }, // (Offset,Value)-Pair #9
-        { 0x0042, 0xF8 }, // (Offset,Value)-Pair #10
-        { 0x0043, 0x0A }, // (Offset,Value)-Pair #11
+        // XnInit+0x003C : push 0x4E455444
+        { 0x003C, 0x68 }, // (Offset,Value)-Pair #9
+        { 0x003D, 0x4E }, // (Offset,Value)-Pair #10
+        { 0x003E, 0x45 }, // (Offset,Value)-Pair #11
 
 		// XnInit+0x01FA : OR DWORD PTR SS:[EBP-4],FFFFFFFF
         { 0x01FA, 0x83 }, // (Offset,Value)-Pair #12
@@ -74,13 +74,13 @@ OOVPA_END;
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup_1_0_4627, 8,
+OOVPA_XREF(XNetStartup, 4627, 8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // XNetStartup+0x0F : call [XnInit]
-        { 0x10, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : xor eax, eax
         { 0x00, 0x33 }, // (Offset,Value)-Pair #2
@@ -103,13 +103,13 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup_1_0_4627, 9,
+OOVPA_XREF(WSAStartup, 4627, 9,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // WSAStartup+0x0F : call [XnInit]
-        { 0x14, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x14, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x00 : push [esp+0x08]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #2
@@ -128,7 +128,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(socket_1_0_4627, 20)
+OOVPA_NO_XREF(socket, 4627, 20)
 
         // socket+0x13 : push 0x276D
         { 0x0013, 0x68 }, // (Offset,Value)-Pair #1
@@ -166,7 +166,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF(connect_1_0_4627, 24)
+OOVPA_NO_XREF(connect, 4627, 24)
 
         // connect+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -212,7 +212,7 @@ OOVPA_END;
 // ******************************************************************
 // * send
 // ******************************************************************
-OOVPA_NO_XREF(send_1_0_4627, 24)
+OOVPA_NO_XREF(send, 4627, 24)
 
         // send+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -258,7 +258,7 @@ OOVPA_END;
 // ******************************************************************
 // * recv
 // ******************************************************************
-OOVPA_NO_XREF(recv_1_0_4627, 24)
+OOVPA_NO_XREF(recv, 4627, 24)
 
         // recv+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -304,7 +304,7 @@ OOVPA_END;
 // ******************************************************************
 // * ioctlsocket
 // ******************************************************************
-OOVPA_NO_XREF(ioctlsocket_1_0_4627, 10)
+OOVPA_NO_XREF(ioctlsocket, 4627, 10)
 
         // ioctlsocket+0x13 : push 0x276D
         { 0x13, 0x68 }, // (Offset,Value)-Pair #1
@@ -326,28 +326,20 @@ OOVPA_NO_XREF(ioctlsocket_1_0_4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * XNet_1_0_4627
+// * XNet_4627
 // ******************************************************************
-OOVPATable XNet_1_0_4627[] = {
-	// XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_4627, XTL::EmuXNetStartup), // same as xonline 4361
-	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_4627, XTL::EmuWSAStartup), // same as xonline 4361
-	// XnInit (XREF)
-	OOVPA_TABLE_XREF(XnInit_1_0_4627),
-	// socket
-	OOVPA_TABLE_PATCH(socket_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
-	// connect
-	OOVPA_TABLE_PATCH(connect_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuconnect)),
-	// send
-	OOVPA_TABLE_PATCH(send_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusend)),
-	// recv
-	OOVPA_TABLE_PATCH(recv_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emurecv)),
-	// ioctlsocket
-	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
+OOVPATable XNet_4627[] = {
+	REGISTER_OOVPA(XNetStartup, 4627, PATCH), // same as xonline 4361
+	REGISTER_OOVPA(WSAStartup, 4627, PATCH), // same as xonline 4361
+	REGISTER_OOVPA(XnInit, 4627, XREF),
+	REGISTER_OOVPA(socket, 4627, EMUTHIS),
+	REGISTER_OOVPA(connect, 4627, EMUTHIS),
+	REGISTER_OOVPA(send, 4627, EMUTHIS),
+	REGISTER_OOVPA(recv, 4627, EMUTHIS),
+	REGISTER_OOVPA(ioctlsocket, 4627, EMUTHIS),
 };
 
 // ******************************************************************
-// * XNet_1_0_4627_SIZE
+// * XNet_4627_SIZE
 // ******************************************************************
-uint32 XNet_1_0_4627_SIZE = sizeof(XNet_1_0_4627);
+uint32 XNet_4627_SIZE = sizeof(XNet_4627);

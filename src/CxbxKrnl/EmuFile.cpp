@@ -619,8 +619,7 @@ NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xboxkrnl::FILE_LINK_INFORMATION
 
 	// Build the native FILE_LINK_INFORMATION struct
 	*Length = sizeof(NtDll::FILE_LINK_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_LINK_INFORMATION *ntLinkInfo = (NtDll::FILE_LINK_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(ntLinkInfo, *Length);
+	NtDll::FILE_LINK_INFORMATION *ntLinkInfo = (NtDll::FILE_LINK_INFORMATION *) CxbxCalloc(1, *Length);
 	ntLinkInfo->ReplaceIfExists = xboxLinkInfo->ReplaceIfExists;
 	ntLinkInfo->RootDirectory = RootDirectory;
 	ntLinkInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
@@ -640,8 +639,7 @@ NtDll::FILE_RENAME_INFORMATION * _XboxToNTRenameInfo(xboxkrnl::FILE_RENAME_INFOR
 
 	// Build the native FILE_RENAME_INFORMATION struct
 	*Length = sizeof(NtDll::FILE_RENAME_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_RENAME_INFORMATION *ntRenameInfo = (NtDll::FILE_RENAME_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(ntRenameInfo, *Length);
+	NtDll::FILE_RENAME_INFORMATION *ntRenameInfo = (NtDll::FILE_RENAME_INFORMATION *) CxbxCalloc(1, *Length);
 	ntRenameInfo->ReplaceIfExists = xboxRenameInfo->ReplaceIfExists;
 	ntRenameInfo->RootDirectory = RootDirectory;
 	ntRenameInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);

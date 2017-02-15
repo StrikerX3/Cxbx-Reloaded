@@ -55,10 +55,10 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 	case X_D3DFMT_A4R4G4B4:
 	case X_D3DFMT_R5G6B5:
 	case X_D3DFMT_A8L8:
-	case X_D3DFMT_R6G5B5:
-	case X_D3DFMT_G8B8:
+	case X_D3DFMT_R6G5B5: // Alias : X_D3DFMT_L6V5U5
+	case X_D3DFMT_G8B8: // Alias : X_D3DFMT_V8U8
 	case X_D3DFMT_R8B8:
-	case X_D3DFMT_D16:
+	case X_D3DFMT_D16: // Alias : X_D3DFMT_D16_LOCKABLE
 	case X_D3DFMT_F16:
 	case X_D3DFMT_L16:
 	case X_D3DFMT_R5G5B5A1:
@@ -66,15 +66,55 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 		*pBPP = 2;
 		return true;
 	case X_D3DFMT_A8R8G8B8:
-	case X_D3DFMT_X8R8G8B8: 
+	case X_D3DFMT_X8R8G8B8: // Alias : X_D3DFMT_X8L8V8U8
 	case X_D3DFMT_D24S8:
 	case X_D3DFMT_F24S8:
 	case X_D3DFMT_V16U16:
-	case X_D3DFMT_A8B8G8R8:
+	case X_D3DFMT_A8B8G8R8: // Alias : X_D3DFMT_Q8W8V8U8
 	case X_D3DFMT_B8G8R8A8:
 	case X_D3DFMT_R8G8B8A8:
 		*pBPP = 4;
 		return true;
+	case X_D3DFMT_DXT1:
+	case X_D3DFMT_DXT2: // Alias : X_D3DFMT_DXT3
+	case X_D3DFMT_DXT4: // Alias : X_D3DFMT_DXT5
+	case X_D3DFMT_LIN_L8:
+	case X_D3DFMT_LIN_AL8:
+	case X_D3DFMT_LIN_A8:
+		*pBPP = 1;
+		return false;
+	case X_D3DFMT_YUY2:
+	case X_D3DFMT_UYVY:
+	case X_D3DFMT_LIN_R8B8:
+	case X_D3DFMT_LIN_G8B8: // Alias : X_D3DFMT_LIN_V8U8
+	case X_D3DFMT_LIN_R5G6B5:
+	case X_D3DFMT_LIN_X1R5G5B5:
+	case X_D3DFMT_LIN_A4R4G4B4:
+	case X_D3DFMT_LIN_A1R5G5B5:
+	case X_D3DFMT_LIN_A8L8:
+	case X_D3DFMT_LIN_D16:
+	case X_D3DFMT_LIN_F16:
+	case X_D3DFMT_LIN_L16:
+	case X_D3DFMT_LIN_R6G5B5: // Alias : X_D3DFMT_LIN_L6V5U5
+	case X_D3DFMT_LIN_R5G5B5A1:
+	case X_D3DFMT_LIN_R4G4B4A4:
+		*pBPP = 2;
+		return false;
+	case X_D3DFMT_LIN_X8R8G8B8: // Alias : X_D3DFMT_LIN_X8L8V8U8
+	case X_D3DFMT_LIN_A8R8G8B8:
+	case X_D3DFMT_LIN_D24S8:
+	case X_D3DFMT_LIN_F24S8:
+	case X_D3DFMT_LIN_V16U16:
+	case X_D3DFMT_LIN_A8B8G8R8:
+	case X_D3DFMT_LIN_B8G8R8A8:
+	case X_D3DFMT_LIN_R8G8B8A8:
+		*pBPP = 4;
+		return false;
+/*
+	case X_D3DFMT_VERTEXDATA:
+	case X_D3DFMT_INDEX16: // Dxbx addition : Not an Xbox format, used internally
+*/
+
     }
 
     return FALSE;
@@ -544,3 +584,93 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  0x00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
 };
+
+void XTL::EmuUnswizzleRect
+(
+	PVOID pSrcBuff,
+	DWORD dwWidth,
+	DWORD dwHeight,
+	DWORD dwDepth,
+	PVOID pDstBuff,
+	DWORD dwPitch,
+	RECT rSrc, // Unused
+	POINT poDst, // Unused
+	DWORD dwBPP // expressed in Bytes Per Pixel
+) // Source : Dxbx
+{
+	// TODO : The following could be done using a lookup table :
+	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
+	for (uint i=1, j=1; (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth); i <<= 1) {
+		if (i < dwWidth) {
+			dwMaskX = dwMaskX | j;
+			j <<= 1;
+		};
+
+		if (i < dwHeight) {
+			dwMaskY = dwMaskY | j;
+			j <<= 1;
+		}
+
+		if (i < dwDepth) {
+			dwMaskZ = dwMaskZ | j;
+			j <<= 1;
+		}
+	}
+
+	// get the biggest mask
+	DWORD dwMaskMax;
+	if (dwMaskX > dwMaskY)
+		dwMaskMax = dwMaskX;
+	else
+		dwMaskMax = dwMaskY;
+
+	if (dwMaskZ > dwMaskMax)
+		dwMaskMax = dwMaskZ;
+
+	DWORD dwStartX = 0, dwOffsetX = 0;
+	DWORD dwStartY = 0, dwOffsetY = 0;
+	DWORD dwStartZ = 0, dwOffsetW = 0;
+	/* TODO : Use values from poDst and rSrc to initialize above values, after which the following makes more sense:
+	for (uint i=1; i <= dwMaskMax; i <<= 1) {
+		if (i <= dwMaskX) {
+			if (dwMaskX & i)
+				dwStartX |= (dwOffsetX & i);
+			else
+				dwOffsetX <<= 1;
+		}
+
+		if (i <= dwMaskY) {
+			if (dwMaskY & i)
+				dwStartY |= dwOffsetY & i;
+			else
+				dwOffsetY <<= 1;
+		}
+
+		if (i <= dwMaskZ) {
+			if (dwMaskZ & i)
+				dwStartZ |= dwOffsetZ & i;
+			else
+				dwOffsetZ <<= 1;
+		}
+	}*/
+
+	DWORD dwZ = dwStartZ;
+	for (uint z = 0; z < dwDepth; z++) {
+		DWORD dwY = dwStartY;
+		for (uint y = 0; y < dwHeight; y++) {
+			DWORD dwX = dwStartX;
+			for (uint x = 0; x < dwWidth; x++) {
+				int delta = ((dwX | dwY | dwZ) * dwBPP);
+				memcpy(pDstBuff, (PBYTE)pSrcBuff + delta, dwBPP); // copy one pixel
+				pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
+				dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+			}
+
+			pDstBuff = (PBYTE)pDstBuff + dwPitch - (dwWidth * dwBPP); // step to next line in destination
+			dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
+		}
+
+		// TODO : How to step to next level in destination? Should X and Y be recalculated per level?
+		dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
+	}
+} // EmuUnswizzleRect NOPATCH

@@ -151,9 +151,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
-    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxMalloc(sizeof(CACHEDSTREAM));
-
-    ZeroMemory(pCachedStream, sizeof(CACHEDSTREAM));
+    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxCalloc(1, sizeof(CACHEDSTREAM));
 
     // Check if the cache is full, if so, throw away the least used stream
     if(g_PatchedStreamsCache.get_count() > VERTEX_BUFFER_CACHE_SIZE)
@@ -504,182 +502,130 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         }
     }
 
-    for(uint32 uiVertex = 0; uiVertex < pPatchDesc->dwVertexCount; uiVertex++)
-    {
-        DWORD dwPosOrig = 0;
-        DWORD dwPosNew = 0;
-        for(UINT uiType = 0; uiType < pStreamPatch->NbrTypes; uiType++)
-        {
-            switch(pStreamPatch->pTypes[uiType])
-            {
-                case 0x12: // FLOAT1
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           sizeof(FLOAT));
-                    dwPosOrig += sizeof(FLOAT);
-                    dwPosNew  += sizeof(FLOAT);
-                    break;
-                case 0x22: // FLOAT2
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           2 * sizeof(FLOAT));
-                    dwPosOrig += 2 * sizeof(FLOAT);
-                    dwPosNew  += 2 * sizeof(FLOAT);
-                    break;
-                case 0x32: // FLOAT3
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           3 * sizeof(FLOAT));
-                    dwPosOrig += 3 * sizeof(FLOAT);
-                    dwPosNew  += 3 * sizeof(FLOAT);
-                    break;
-                case 0x42: // FLOAT4
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           4 * sizeof(FLOAT));
-                    dwPosOrig += 4 * sizeof(FLOAT);
-                    dwPosNew  += 4 * sizeof(FLOAT);
-                    break;
-                case 0x40: // D3DCOLOR
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           sizeof(XTL::D3DCOLOR));
-                    dwPosOrig += sizeof(XTL::D3DCOLOR);
-                    dwPosNew  += sizeof(XTL::D3DCOLOR);
-                    break;
-                case 0x16: //NORMPACKED3
-                    {
-                        DWORD dwPacked = ((DWORD *)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
+	for (uint32 uiVertex = 0; uiVertex < pPatchDesc->dwVertexCount; uiVertex++)
+	{
+		uint08 *pOrigVertex = &pOrigData[uiVertex * uiStride];
+		uint08 *pNewDataPos = &pNewData[uiVertex * pStreamPatch->ConvertedStride];
+		for (UINT uiType = 0; uiType < pStreamPatch->NbrTypes; uiType++)
+		{
+			// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
+			// All other cases are catched by the memcpy in the default-block.
+			switch (pStreamPatch->pTypes[uiType])
+			{
+			case X_D3DVSDT_NORMPACKED3: { // 0x16: // Make it FLOAT3
+				// Hit by Dashboard
+				int32 iPacked = ((int32 *)pOrigVertex)[0];
+				// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((iPacked      ) >> 22)) / 511.0f;
+				pOrigVertex += 1 * sizeof(int32);
+				break;
+			}
+			case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
+				((SHORT *)pNewDataPos)[0] = ((SHORT*)pOrigVertex)[0];
+				((SHORT *)pNewDataPos)[1] = 0x00;
+				pOrigVertex += 1 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
+				// Hit by Turok
+				memcpy(pNewDataPos, pOrigVertex, 3 * sizeof(SHORT));
+				((SHORT *)pNewDataPos)[3] = 0x01;
+				pOrigVertex += 3 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_PBYTE1: { // 0x14:  // Make it FLOAT1
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				pOrigVertex += 1 * sizeof(BYTE);
+				break;
+			}
+			case X_D3DVSDT_PBYTE2: { // 0x24:  // Make it FLOAT2
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				pOrigVertex += 2 * sizeof(BYTE);
+				break;
+			}
+			case X_D3DVSDT_PBYTE3: { // 0x34: // Make it FLOAT3
+				// Hit by Turok
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)pOrigVertex)[2]) / 255.0f;
+				pOrigVertex += 3 * sizeof(BYTE);
+				break;
+			}
+			case X_D3DVSDT_PBYTE4: { // 0x44: // Make it FLOAT4
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)pOrigVertex)[2]) / 255.0f;
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((BYTE*)pOrigVertex)[3]) / 255.0f;
+				pOrigVertex += 4 * sizeof(BYTE);
+				break;
+			}
+			case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				pOrigVertex += 1 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				pOrigVertex += 2 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
+				pOrigVertex += 3 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((SHORT*)pOrigVertex)[3]) / 32767.0f;
+				pOrigVertex += 4 * sizeof(SHORT);
+				break;
+			}
+			case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT*)pOrigVertex)[0];
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT*)pOrigVertex)[1];
+				((FLOAT *)pNewDataPos)[2] = 0.0f;
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT*)pOrigVertex)[2];
+				pOrigVertex += 3 * sizeof(FLOAT);
+				break;
+			}
+			/*TODO
+			case X_D3DVSDT_NONE: { // 0x02:
+				printf("D3DVSDT_NONE / xbox ext. nsp /");
+				dwNewDataType = 0xFF;
+				break;
+			}
+			*/
+			default: {
+				// Generic 'conversion' - just make a copy :
+				memcpy(pNewDataPos, pOrigVertex, pStreamPatch->pSizes[uiType]);
+				pOrigVertex += pStreamPatch->pSizes[uiType];
+				break;
+			}
+			} // switch
 
-                        ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)(dwPacked & 0x7ff)) / 1023.0f;
-                        ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((dwPacked >> 11) & 0x7ff)) / 1023.0f;
-                        ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((dwPacked >> 22) & 0x3ff)) / 511.0f;
+			// Increment the new pointer :
+			pNewDataPos += pStreamPatch->pSizes[uiType];
+		}
+	}
 
-                        dwPosOrig += sizeof(DWORD);
-                        dwPosNew  += 3 * sizeof(FLOAT);
-                    }
-                    break;
-                case 0x15: // SHORT1
-                    // Make it a SHORT2
-                    (*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 0 * sizeof(SHORT)])) = *(SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig];
-                    (*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 1 * sizeof(SHORT)])) = 0x00;
-
-                    dwPosOrig += 1 * sizeof(SHORT);
-                    dwPosNew  += 2 * sizeof(SHORT);
-
-                    break;
-                case 0x25: // SHORT2
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride+dwPosOrig],
-                           2 * sizeof(SHORT));
-                    dwPosOrig += 2 * sizeof(SHORT);
-                    dwPosNew  += 2 * sizeof(SHORT);
-                    break;
-                case 0x35: // SHORT3
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           3 * sizeof(SHORT));
-                    // Make it a SHORT4 and set the last short to 1
-                    (*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 3 * sizeof(SHORT)])) = 0x01;
-
-                    dwPosOrig += 3 * sizeof(SHORT);
-                    dwPosNew  += 4 * sizeof(SHORT);
-
-                    break;
-                case 0x45: // SHORT4
-                    memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
-                           &pOrigData[uiVertex * uiStride + dwPosOrig],
-                           4 * sizeof(SHORT));
-                    dwPosOrig += 4 * sizeof(SHORT);
-                    dwPosNew  += 4 * sizeof(SHORT);
-                    break;
-                case 0x14: // PBYTE1
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-
-                    dwPosOrig += 1 * sizeof(BYTE);
-                    dwPosNew  += 1 * sizeof(FLOAT);
-
-                    break;
-                case 0x24: // PBYTE2
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-
-                    dwPosOrig += 2 * sizeof(BYTE);
-                    dwPosNew  += 2 * sizeof(FLOAT);
-
-                    break;
-                case 0x34: // PBYTE3
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-
-                    dwPosOrig += 3 * sizeof(BYTE);
-                    dwPosNew  += 3 * sizeof(FLOAT);
-
-                    break;
-                case 0x44: // PBYTE4
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[3] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 255.0f;
-
-                    dwPosOrig += 4 * sizeof(BYTE);
-                    dwPosNew  += 4 * sizeof(FLOAT);
-
-                    break;
-                case 0x11: // NORMSHORT1
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-
-                    dwPosOrig += 1 * sizeof(SHORT);
-                    dwPosNew  += 1 * sizeof(FLOAT);
-                    break;
-                case 0x21: // NORMSHORT2
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-
-                    dwPosOrig += 2 * sizeof(SHORT);
-                    dwPosNew  += 2 * sizeof(FLOAT);
-                    break;
-                case 0x31: // NORMSHORT3
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-
-                    dwPosOrig += 3 * sizeof(SHORT);
-                    dwPosNew  += 3 * sizeof(FLOAT);
-                    break;
-                case 0x41: // NORMSHORT4
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[3] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 32767.0f;
-
-                    dwPosOrig += 4 * sizeof(SHORT);
-                    dwPosNew  += 4 * sizeof(FLOAT);
-                    break;
-                case 0x72: // FLOAT2H
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1];
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = 0.0f;
-                    ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[3] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2];
-					break;
-
-                /*TODO
-                case 0x02:
-                    printf("D3DVSDT_NONE / xbox ext. nsp /");
-                    dwNewDataType = 0xFF;
-                    break;
-                */
-                default:
-                    CxbxKrnlCleanup("Unhandled stream type: 0x%.02X\n", pStreamPatch->pTypes[uiType]);
-                    break;
-            }
-        }
-    }
     if(!pPatchDesc->pVertexStreamZeroData)
     {
-        pNewVertexBuffer->Unlock();
-        pOrigVertexBuffer->Unlock();
+        //if(pNewVertexBuffer != nullptr) // Dxbx addition
+			pNewVertexBuffer->Unlock();
+		//if (pOrigVertexBuffer != nullptr) // Dxbx addition
+			pOrigVertexBuffer->Unlock();
 
         if(FAILED(g_pD3DDevice8->SetStreamSource(uiStream, pNewVertexBuffer, pStreamPatch->ConvertedStride)))
         {
@@ -703,6 +649,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             m_pNewVertexStreamZeroData = pNewData;
         }
     }
+
     pStream->uiOrigStride = uiStride;
     pStream->uiNewStride = pStreamPatch->ConvertedStride;
     m_bPatched = true;
@@ -713,20 +660,20 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream)
 {
     // Check for active linear textures.
-    bool bHasLinearTex = false, bTexIsLinear[4];
+	bool bHasLinearTex = false, bTexIsLinear[4] = { false };
     X_D3DPixelContainer *pLinearPixelContainer[4];
 
     for(uint08 i = 0; i < 4; i++)
     {
         X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)EmuD3DActiveTexture[i];
-        if(pPixelContainer && EmuXBFormatIsLinear(((X_D3DFORMAT)pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT))
-        {
-            bHasLinearTex = bTexIsLinear[i] = true;
-            pLinearPixelContainer[i] = pPixelContainer;
-        }
-        else
-        {
-            bTexIsLinear[i] = false;
+		if (pPixelContainer)
+		{ 
+			XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+			if (EmuXBFormatIsLinear(XBFormat))
+			{
+				bHasLinearTex = bTexIsLinear[i] = true;
+				pLinearPixelContainer[i] = pPixelContainer;
+			}
         }
     }
 
@@ -1364,7 +1311,7 @@ VOID XTL::EmuFlushIVB()
     return;
 }
 
-VOID XTL::EmuUpdateActiveTexture()
+VOID XTL::EmuUpdateActiveTexture() // Never called!
 {
     //
     // DEBUGGING
@@ -1403,7 +1350,7 @@ VOID XTL::EmuUpdateActiveTexture()
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
                  || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
+                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
             {
                 bSwizzled = TRUE;
 
@@ -1416,7 +1363,7 @@ VOID XTL::EmuUpdateActiveTexture()
                 dwBPP = 2;
             }
             else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ 
-				 || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+				 || X_Format == 0x01 /* X_D3DFMT_AL8 */)
             {
                 bSwizzled = TRUE;
 
@@ -1513,7 +1460,7 @@ VOID XTL::EmuUpdateActiveTexture()
                         }
                         else
                         {
-                            XTL::EmuXGUnswizzleRect
+                            XTL::EmuUnswizzleRect
                             (
                                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                                 LockedRect.Pitch, iRect, iPoint, dwBPP

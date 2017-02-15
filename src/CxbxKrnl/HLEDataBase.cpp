@@ -39,6 +39,8 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+#include "CxbxKrnl.h" // For xbaddr
+
 extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 
 const char *Lib_D3D8 = "D3D8";
@@ -64,6 +66,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/Xapi.1.0.4721.inl"
 #include "HLEDataBase/Xapi.1.0.5233.inl"
 #include "HLEDataBase/Xapi.1.0.5558.inl"
+#include "HLEDataBase/Xapi.1.0.5788.inl"
 #include "HLEDataBase/Xapi.1.0.5849.inl"
 #include "HLEDataBase/D3D8.1.0.3925.inl"
 #include "HLEDataBase/D3D8.1.0.4034.inl"
@@ -73,6 +76,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/D3D8.1.0.4627.inl"
 #include "HLEDataBase/D3D8.1.0.5233.inl"
 #include "HLEDataBase/D3D8.1.0.5558.inl"
+#include "HLEDataBase/D3D8.1.0.5788.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
 #include "HLEDataBase/D3D8LTCG.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
@@ -82,6 +86,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/DSound.1.0.4627.inl"
 #include "HLEDataBase/DSound.1.0.5233.inl"
 #include "HLEDataBase/DSound.1.0.5558.inl"
+#include "HLEDataBase/DSound.1.0.5788.inl"
 #include "HLEDataBase/DSound.1.0.5849.inl"
 #include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4034.inl"
@@ -90,6 +95,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XG.1.0.4627.inl"
 #include "HLEDataBase/XG.1.0.5233.inl"
 #include "HLEDataBase/XG.1.0.5558.inl"
+#include "HLEDataBase/XG.1.0.5788.inl"
 #include "HLEDataBase/XG.1.0.5849.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XNet.1.0.4627.inl"
@@ -97,6 +103,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XOnline.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.5233.inl"
 #include "HLEDataBase/XOnline.1.0.5558.inl"
+#include "HLEDataBase/XOnline.1.0.5788.inl"
 #include "HLEDataBase/XOnline.1.0.5849.inl"
 #include "HLEDataBase/XactEng.1.0.4627.inl"
 
@@ -105,9 +112,9 @@ const char *Lib_XONLINES = "XONLINES";
 // * HLEDataBase
 // ******************************************************************
 #define HLE_ENTRY(Lib, DB, Version) \
-	{Lib, Version, DB##_1_0_##Version, DB##_1_0_##Version##_SIZE }
+	{Lib, Version, DB##_##Version, DB##_##Version##_SIZE }
 //  For example, HLE_ENTRY(Lib_XAPILIB, XAPI, 3911) results in:
-//  {Lib_XAPILIB, 3911, XAPI_1_0_3911, XAPI_1_0_3911_SIZE }
+//  {Lib_XAPILIB, 3911, XAPI_3911, XAPI_3911_SIZE }
 
 const HLEData HLEDataBase[] =
 {
@@ -120,6 +127,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4721),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5233),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5558),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 5788),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5849),
 
 	HLE_ENTRY(Lib_D3D8, D3D8, 3925),
@@ -130,6 +138,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_D3D8, D3D8, 4627),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5233),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
+	HLE_ENTRY(Lib_D3D8, D3D8, 5788),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5849),
 
 	HLE_ENTRY(Lib_D3D8LTCG, D3D8LTCG, 5849),
@@ -141,6 +150,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_DSOUND, DSound, 4627),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5233),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5558),
+	HLE_ENTRY(Lib_DSOUND, DSound, 5788),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5849),
 
 	HLE_ENTRY(Lib_XGRAPHC, XG, 3911),
@@ -150,6 +160,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4627),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5233),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5558),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 5788),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5849),
 
 	HLE_ENTRY(Lib_XNETS, XNet, 3911),
@@ -161,6 +172,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XONLINES, XOnline, 4627),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5233),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),
+	HLE_ENTRY(Lib_XONLINES, XOnline, 5788),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
 
 	HLE_ENTRY(Lib_XACTENG, XactEng, 4627),
@@ -174,4 +186,4 @@ extern const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept
+extern xbaddr XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept

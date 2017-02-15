@@ -41,7 +41,6 @@
 #include <d3d8types.h>
 
 // TODO: fill out these enumeration tables for convienance
-typedef DWORD X_D3DFORMAT;
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
@@ -51,91 +50,131 @@ typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 typedef PVOID X_D3DCALLBACK;
 
-const int X_D3DFMT_L8 = 0x00;
-const int X_D3DFMT_AL8 = 0x01;
-const int X_D3DFMT_A1R5G5B5 = 0x02;
-const int X_D3DFMT_X1R5G5B5 = 0x03;
-const int X_D3DFMT_A4R4G4B4 = 0x04;
-const int X_D3DFMT_R5G6B5 = 0x05;
-const int X_D3DFMT_A8R8G8B8 = 0x06;
-const int X_D3DFMT_X8R8G8B8 = 0x07;
-const int X_D3DFMT_X8L8V8U8 = 0x07; // Alias
+typedef enum _X_D3DFORMAT
+{
+/*
+	Xbox1 D3DFORMAT notes
+	---------------------
 
-const int X_D3DFMT_P8 = 0x0b; // 8-bit Palletized
+	The Xbox1 D3DFORMAT type consists of 4 different format categories :
+	1. Swizzled (improves data locality, incompatible with native Direct3D)
+	2. Compressed (DXT compression, giving 4:1 reduction on 4x4 pixel blocks)
+	3. Linear (compatible with native Direct3D)
+	4. Depth (Fixed or Floating point, stored Linear or Swizzled)
 
-const int X_D3DFMT_A8 = 0x19;
-const int X_D3DFMT_A8L8 = 0x1a;
-const int X_D3DFMT_R6G5B5 = 0x27;
-const int X_D3DFMT_L6V5U5 = 0x27; // Alias
+	Requirements\Format      Swizzled  Compressed  Linear  Depth   Notes
 
-const int X_D3DFMT_G8B8 = 0x28;
-const int X_D3DFMT_V8U8 = 0x28; // Alias
+	Power-of-two required ?  YES       YES         NO      NO
+	Mipmap supported ?       YES       YES         NO      YES     Linear has MipmapLevels = 1
+	CubeMaps supported ?     YES       YES         NO      NO      Cubemaps have 6 faces
+	Supports volumes ?       YES       YES         NO      NO      Volumes have 3 dimensions, Textures have 2
+	Can be a rendertarget ?  YES       YES         YES     LINEAR  Depth buffers can only be rendered to if stored Linear
 
-const int X_D3DFMT_R8B8 = 0x29;
-const int X_D3DFMT_D24S8 = 0x2a;
-const int X_D3DFMT_F24S8 = 0x2b;
-const int X_D3DFMT_D16 = 0x2c;
-const int X_D3DFMT_D16_LOCKABLE = 0x2c; // Alias
+	Implications :
+	- CubeMaps must be square
+	- Volumes cannot be cube mapped and vice versa
 
-const int X_D3DFMT_F16 = 0x2d;
-const int X_D3DFMT_L16 = 0x32;
-const int X_D3DFMT_V16U16 = 0x33;
-const int X_D3DFMT_R5G5B5A1 = 0x38;
-const int X_D3DFMT_R4G4B4A4 = 0x39;
-const int X_D3DFMT_A8B8G8R8 = 0x3A;
-const int X_D3DFMT_Q8W8V8U8 = 0x3A; // Alias
+	Maximum dimensions :
+	2D : 4096 x 4096 (12 mipmap levels)
+	3D : 512 x 512 x 512 (9 mipmap levels)
 
-const int X_D3DFMT_B8G8R8A8 = 0x3B;
-const int X_D3DFMT_R8G8B8A8 = 0x3C;
+*/
 
-// YUV Formats
+	// Xbox D3DFORMAT types :
+	// See http://wiki.beyondunreal.com/Legacy:Texture_Format
 
-const int X_D3DFMT_YUY2 = 0x24;
-const int X_D3DFMT_UYVY = 0x25;
+	// Swizzled Formats
 
-// Compressed Formats
+	X_D3DFMT_L8 = 0x00,
+	X_D3DFMT_AL8 = 0x01,
+	X_D3DFMT_A1R5G5B5 = 0x02,
+	X_D3DFMT_X1R5G5B5 = 0x03,
+	X_D3DFMT_A4R4G4B4 = 0x04,
+	X_D3DFMT_R5G6B5 = 0x05,
+	X_D3DFMT_A8R8G8B8 = 0x06,
+	X_D3DFMT_X8R8G8B8 = 0x07,
+	X_D3DFMT_X8L8V8U8 = 0x07, // Alias
 
-const int X_D3DFMT_DXT1 = 0x0C; // opaque/one-bit alpha
+	X_D3DFMT_P8 = 0x0b, // 8-bit Palletized
 
-const int X_D3DFMT_DXT2 = 0x0E;
-const int X_D3DFMT_DXT3 = 0x0E; // linear alpha
+	X_D3DFMT_A8 = 0x19,
+	X_D3DFMT_A8L8 = 0x1a,
+	X_D3DFMT_R6G5B5 = 0x27,
+	X_D3DFMT_L6V5U5 = 0x27, // Alias
 
-const int X_D3DFMT_DXT4 = 0x0F;
-const int X_D3DFMT_DXT5 = 0x0F; // interpolated alpha
+	X_D3DFMT_G8B8 = 0x28,
+	X_D3DFMT_V8U8 = 0x28, // Alias
 
-								// Linear Formats
+	X_D3DFMT_R8B8 = 0x29,
+	X_D3DFMT_D24S8 = 0x2a,
+	X_D3DFMT_F24S8 = 0x2b,
+	X_D3DFMT_D16 = 0x2c,
+	X_D3DFMT_D16_LOCKABLE = 0x2c, // Alias
 
-const int X_D3DFMT_LIN_A1R5G5B5 = 0x10;
-const int X_D3DFMT_LIN_R5G6B5 = 0x11;
-const int X_D3DFMT_LIN_A8R8G8B8 = 0x12;
-const int X_D3DFMT_LIN_L8 = 0x13;
-const int X_D3DFMT_LIN_R8B8 = 0x16;
-const int X_D3DFMT_LIN_G8B8 = 0x17;
-const int X_D3DFMT_LIN_V8U8 = 0x17; // Alias
+	X_D3DFMT_F16 = 0x2d,
+	X_D3DFMT_L16 = 0x32,
+	X_D3DFMT_V16U16 = 0x33,
+	X_D3DFMT_R5G5B5A1 = 0x38,
+	X_D3DFMT_R4G4B4A4 = 0x39,
+	X_D3DFMT_A8B8G8R8 = 0x3A,
+	X_D3DFMT_Q8W8V8U8 = 0x3A, // Alias
 
-const int X_D3DFMT_LIN_AL8 = 0x1b;
-const int X_D3DFMT_LIN_X1R5G5B5 = 0x1c;
-const int X_D3DFMT_LIN_A4R4G4B4 = 0x1d;
-const int X_D3DFMT_LIN_X8R8G8B8 = 0x1e;
-const int X_D3DFMT_LIN_X8L8V8U8 = 0x1e; // Alias
+	X_D3DFMT_B8G8R8A8 = 0x3B,
+	X_D3DFMT_R8G8B8A8 = 0x3C,
 
-const int X_D3DFMT_LIN_A8 = 0x1f;
-const int X_D3DFMT_LIN_A8L8 = 0x20;
-const int X_D3DFMT_LIN_D24S8 = 0x2E;
-const int X_D3DFMT_LIN_F24S8 = 0x2f;
-const int X_D3DFMT_LIN_D16 = 0x30;
-const int X_D3DFMT_LIN_F16 = 0x31;
-const int X_D3DFMT_LIN_L16 = 0x35;
-const int X_D3DFMT_LIN_V16U16 = 0x36;
-const int X_D3DFMT_LIN_R6G5B5 = 0x37;
-const int X_D3DFMT_LIN_L6V5U5 = 0x37; // Alias
+	// YUV Formats
 
-const int X_D3DFMT_LIN_R5G5B5A1 = 0x3D;
-const int X_D3DFMT_LIN_R4G4B4A4 = 0x3e;
-const int X_D3DFMT_LIN_A8B8G8R8 = 0x3f;
-const int X_D3DFMT_LIN_B8G8R8A8 = 0x40;
-const int X_D3DFMT_LIN_R8G8B8A8 = 0x41;
-const int X_D3DFMT_VERTEXDATA = 0x64;
+	X_D3DFMT_YUY2 = 0x24,
+	X_D3DFMT_UYVY = 0x25,
+
+	// Compressed Formats
+
+	X_D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
+	X_D3DFMT_DXT2 = 0x0E, // linear alpha
+	X_D3DFMT_DXT3 = 0x0E, // Alias
+	X_D3DFMT_DXT4 = 0x0F, // interpolated alpha
+	X_D3DFMT_DXT5 = 0x0F, // Alias
+
+	// Linear Formats
+
+	X_D3DFMT_LIN_A1R5G5B5 = 0x10,
+	X_D3DFMT_LIN_R5G6B5 = 0x11,
+	X_D3DFMT_LIN_A8R8G8B8 = 0x12,
+	X_D3DFMT_LIN_L8 = 0x13,
+	X_D3DFMT_LIN_R8B8 = 0x16,
+	X_D3DFMT_LIN_G8B8 = 0x17,
+	X_D3DFMT_LIN_V8U8 = 0x17, // Alias
+
+	X_D3DFMT_LIN_AL8 = 0x1b,
+	X_D3DFMT_LIN_X1R5G5B5 = 0x1c,
+	X_D3DFMT_LIN_A4R4G4B4 = 0x1d,
+	X_D3DFMT_LIN_X8R8G8B8 = 0x1e,
+	X_D3DFMT_LIN_X8L8V8U8 = 0x1e, // Alias
+
+	X_D3DFMT_LIN_A8 = 0x1f,
+	X_D3DFMT_LIN_A8L8 = 0x20,
+	X_D3DFMT_LIN_D24S8 = 0x2E,
+	X_D3DFMT_LIN_F24S8 = 0x2f,
+	X_D3DFMT_LIN_D16 = 0x30,
+	X_D3DFMT_LIN_F16 = 0x31,
+	X_D3DFMT_LIN_L16 = 0x35,
+	X_D3DFMT_LIN_V16U16 = 0x36,
+	X_D3DFMT_LIN_R6G5B5 = 0x37,
+	X_D3DFMT_LIN_L6V5U5 = 0x37, // Alias
+
+	X_D3DFMT_LIN_R5G5B5A1 = 0x3D,
+	X_D3DFMT_LIN_R4G4B4A4 = 0x3e,
+	X_D3DFMT_LIN_A8B8G8R8 = 0x3f,
+	X_D3DFMT_LIN_B8G8R8A8 = 0x40,
+	X_D3DFMT_LIN_R8G8B8A8 = 0x41,
+
+	X_D3DFMT_VERTEXDATA = 0x64,
+
+	X_D3DFMT_INDEX16 = 101/*=D3DFMT_INDEX16*/, // Dxbx addition : Not an Xbox format, used internally
+
+	X_D3DFMT_UNKNOWN = 0xFFFFFFFF - 3,  // Unique declaration to make overloads possible
+}
+X_D3DFORMAT, *PX_D3DFORMAT;
 
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
@@ -301,6 +340,7 @@ typedef struct _STREAM_DYNAMIC_PATCH_
     DWORD ConvertedStride;
     DWORD NbrTypes;        // Number of the stream data types
     UINT  *pTypes;         // The stream data types (xbox)
+	UINT  *pSizes;         // The stream data sizes (pc)
 } STREAM_DYNAMIC_PATCH;
 
 typedef struct _VERTEX_DYNAMIC_PATCH_
@@ -441,7 +481,7 @@ X_D3DPALETTESIZE;
 
 struct X_D3DPixelContainer : public X_D3DResource
 {
-    X_D3DFORMAT Format;
+    DWORD		Format;
     DWORD       Size;
 };
 
@@ -556,7 +596,8 @@ typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
 // D3DCALLBACK
 typedef void (__cdecl * D3DCALLBACK)(DWORD Context);
 
-// X_D3DTEXTUREOP values :
+// X_D3DTEXTUREOP values :
+
 #define X_D3DTOP_DISABLE 1
 #define X_D3DTOP_SELECTARG1 2
 #define X_D3DTOP_SELECTARG2 3
@@ -633,5 +674,88 @@ typedef struct _X_STREAMINPUT
     UINT                Stride;
     UINT                Offset;
 } X_STREAMINPUT;
+
+// vertex shader input registers for fixed function vertex shader
+
+//          Name                   Register number      D3DFVF
+const int X_D3DVSDE_POSITION     = 0; // Corresponds to D3DFVF_XYZ
+const int X_D3DVSDE_BLENDWEIGHT  = 1; // Corresponds to D3DFVF_XYZRHW
+const int X_D3DVSDE_NORMAL       = 2; // Corresponds to D3DFVF_NORMAL
+const int X_D3DVSDE_DIFFUSE      = 3; // Corresponds to D3DFVF_DIFFUSE
+const int X_D3DVSDE_SPECULAR     = 4; // Corresponds to D3DFVF_SPECULAR
+const int X_D3DVSDE_FOG          = 5; // Xbox extension
+const int X_D3DVSDE_POINTSIZE    = 6; // Dxbx addition
+const int X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
+const int X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
+const int X_D3DVSDE_TEXCOORD0    = 9; // "Corresponds to D3DFVF_TEX0" says the docs, but 0 means no textures, so probably D3DFVF_TEX1!
+const int X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to D3DFVF_TEX{above}+1
+const int X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to D3DFVF_TEX{above}+2
+const int X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to D3DFVF_TEX{above}+3
+const int X_D3DVSDE_VERTEX       = 0xFFFFFFFF; // Xbox extension for Begin/End drawing (data is a D3DVSDT_FLOAT4)
+
+//typedef X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to make overloads possible;
+
+  // bit declarations for _Type fields
+const int X_D3DVSDT_FLOAT1      = 0x12; // 1D float expanded to (value, 0.0, 0.0, 1.0)
+const int X_D3DVSDT_FLOAT2      = 0x22; // 2D float expanded to (value, value, 0.0, 1.0)
+const int X_D3DVSDT_FLOAT3      = 0x32; // 3D float expanded to (value, value, value, 1.0) In double word format this is ARGB, or in byte ordering it would be B, G, R, A.
+const int X_D3DVSDT_FLOAT4      = 0x42; // 4D float
+const int X_D3DVSDT_D3DCOLOR    = 0x40; // 4D packed unsigned bytes mapped to 0.0 to 1.0 range
+//const int X_D3DVSDT_UBYTE4      = 0x05; // 4D unsigned byte   Dxbx note : Not supported on Xbox ?
+const int X_D3DVSDT_SHORT2      = 0x25; // 2D signed short expanded to (value, value, 0.0, 1.0)
+const int X_D3DVSDT_SHORT4      = 0x45; // 4D signed short
+
+  //  Xbox only declarations :
+const int X_D3DVSDT_NORMSHORT1  = 0x11; // xbox ext. 1D signed, normalized short expanded to (value, 0.0, 0.0, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+const int X_D3DVSDT_NORMSHORT2  = 0x21; // xbox ext. 2D signed, normalized short expanded to (value, value, 0.0, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+const int X_D3DVSDT_NORMSHORT3  = 0x31; // xbox ext. 3D signed, normalized short expanded to (value, value, value, 1.0). Signed, normalized shorts map from -1.0 to 1.0.
+const int X_D3DVSDT_NORMSHORT4  = 0x41; // xbox ext. 4D signed, normalized short expanded to (value, value, value, value). Signed, normalized shorts map from -1.0 to 1.0.
+const int X_D3DVSDT_NORMPACKED3 = 0x16; // xbox ext. Three signed, normalized components packed in 32-bits. (11,11,10). Each component ranges from -1.0 to 1.0. Expanded to (value, value, value, 1.0).
+const int X_D3DVSDT_SHORT1      = 0x15; // xbox ext. 1D signed short expanded to (value, 0., 0., 1). Signed shorts map to the range [-32768, 32767].
+const int X_D3DVSDT_SHORT3      = 0x35; // xbox ext. 3D signed short expanded to (value, value, value, 1). Signed shorts map to the range [-32768, 32767].
+const int X_D3DVSDT_PBYTE1      = 0x14; // xbox ext. 1D packed byte expanded to (value, 0., 0., 1). Packed bytes map to the range [0, 1].
+const int X_D3DVSDT_PBYTE2      = 0x24; // xbox ext. 2D packed byte expanded to (value, value, 0., 1). Packed bytes map to the range [0, 1].
+const int X_D3DVSDT_PBYTE3      = 0x34; // xbox ext. 3D packed byte expanded to (value, value, value, 1). Packed bytes map to the range [0, 1].
+const int X_D3DVSDT_PBYTE4      = 0x44; // xbox ext. 4D packed byte expanded to (value, value, value, value). Packed bytes map to the range [0, 1].
+const int X_D3DVSDT_FLOAT2H     = 0x72; // xbox ext. 3D float that expands to (value, value, 0.0, value). Useful for projective texture coordinates.
+const int X_D3DVSDT_NONE        = 0x02; // xbox ext. nsp
+
+const int MAX_NBR_STREAMS = 16;
+
+#define X_D3DVSD_TOKENTYPESHIFT   29
+#define X_D3DVSD_TOKENTYPEMASK    (7 << X_D3DVSD_TOKENTYPESHIFT)
+
+#define X_D3DVSD_STREAMNUMBERSHIFT 0
+#define X_D3DVSD_STREAMNUMBERMASK (0xF << X_D3DVSD_STREAMNUMBERSHIFT)
+
+#define X_D3DVSD_DATALOADTYPESHIFT 28
+#define X_D3DVSD_DATALOADTYPEMASK (0x1 << X_D3DVSD_DATALOADTYPESHIFT)
+
+#define X_D3DVSD_DATATYPESHIFT 16
+#define X_D3DVSD_DATATYPEMASK (0xFF << X_D3DVSD_DATATYPESHIFT)
+
+#define X_D3DVSD_SKIPCOUNTSHIFT 16
+#define X_D3DVSD_SKIPCOUNTMASK (0xF << X_D3DVSD_SKIPCOUNTSHIFT)
+
+#define X_D3DVSD_VERTEXREGSHIFT 0
+#define X_D3DVSD_VERTEXREGMASK (0x1F << X_D3DVSD_VERTEXREGSHIFT)
+
+#define X_D3DVSD_VERTEXREGINSHIFT 20
+#define X_D3DVSD_VERTEXREGINMASK (0xF << X_D3DVSD_VERTEXREGINSHIFT)
+
+#define X_D3DVSD_CONSTCOUNTSHIFT 25
+#define X_D3DVSD_CONSTCOUNTMASK (0xF << X_D3DVSD_CONSTCOUNTSHIFT)
+
+#define X_D3DVSD_CONSTADDRESSSHIFT 0
+#define X_D3DVSD_CONSTADDRESSMASK (0xFF << X_D3DVSD_CONSTADDRESSSHIFT)
+
+#define X_D3DVSD_CONSTRSSHIFT 16
+#define X_D3DVSD_CONSTRSMASK (0x1FFF << X_D3DVSD_CONSTRSSHIFT)
+
+#define X_D3DVSD_EXTCOUNTSHIFT 24
+#define X_D3DVSD_EXTCOUNTMASK (0x1F << X_D3DVSD_EXTCOUNTSHIFT)
+
+#define X_D3DVSD_EXTINFOSHIFT 0
+#define X_D3DVSD_EXTINFOMASK (0xFFFFFF << X_D3DVSD_EXTINFOSHIFT)
 
 #endif

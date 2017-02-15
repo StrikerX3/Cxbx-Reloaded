@@ -175,7 +175,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0069),                                        // 0x0069 (105) KeInitializeApc
 	(uint32)PANIC(0x006A),                                        // 0x006A (106) KeInitializeDeviceQueue
 	(uint32)FUNC(&xboxkrnl::KeInitializeDpc),                     // 0x006B (107)
-	(uint32)PANIC(0x006C),                                        // 0x006C (108) KeInitializeEvent
+	(uint32)FUNC(&xboxkrnl::KeInitializeEvent),                   // 0x006C (108)
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),               // 0x006D (109)
 	(uint32)PANIC(0x006E),                                        // 0x006E (110) KeInitializeMutant
 	(uint32)PANIC(0x006F),                                        // 0x006F (111) KeInitializeQueue
@@ -188,7 +188,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0076),                                        // 0x0076 (118) KeInsertQueueApc
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                    // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                     // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
-	(uint32)PANIC(0x0079),                                        // 0x0079 (121) KeIsExecutingDpc
+	(uint32)FUNC(&xboxkrnl::KeIsExecutingDpc),                    // 0x0079 (121)
 	(uint32)FUNC(&xboxkrnl::KeLeaveCriticalRegion),               // 0x007A (122)
 	(uint32)PANIC(0x007B),                                        // 0x007B (123) KePulseEvent
 	(uint32)PANIC(0x007C),                                        // 0x007C (124) KeQueryBasePriorityThread
@@ -197,15 +197,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceFrequency),         // 0x007F (127)
 	(uint32)FUNC(&xboxkrnl::KeQuerySystemTime),                   // 0x0080 (128)
 	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToDpcLevel),               // 0x0081 (129)
-	(uint32)PANIC(0x0082),                                        // 0x0082 (130) KeRaiseIrqlToSynchLevel
-	(uint32)PANIC(0x0083),                                        // 0x0083 (131) KeRaiseIrqlToSynchLevel
+	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToSynchLevel),             // 0x0082 (130)
+	(uint32)PANIC(0x0083),                                        // 0x0083 (131) KeReleaseMutant
 	(uint32)PANIC(0x0084),                                        // 0x0084 (132) KeReleaseSemaphore
 	(uint32)PANIC(0x0085),                                        // 0x0085 (133) KeRemoveByKeyDeviceQueue
 	(uint32)PANIC(0x0086),                                        // 0x0086 (134) KeRemoveDeviceQueue
 	(uint32)PANIC(0x0087),                                        // 0x0087 (135) KeRemoveEntryDeviceQueue
 	(uint32)PANIC(0x0088),                                        // 0x0088 (136) KeRemoveQueue
-	(uint32)PANIC(0x0089),                                        // 0x0089 (137) KeRemoveQueueDpc
-	(uint32)PANIC(0x008A),                                        // 0x008A (138) KeResetEvent
+	(uint32)FUNC(&xboxkrnl::KeRemoveQueueDpc),                    // 0x0089 (137)
+	(uint32)FUNC(&xboxkrnl::KeResetEvent),                        // 0x008A (138)
 	(uint32)PANIC(0x008B),                                        // 0x008B (139) KeRestoreFloatingPointState
 	(uint32)PANIC(0x008C),                                        // 0x008C (140) KeResumeThread
 	(uint32)PANIC(0x008D),                                        // 0x008D (141) KeRundownQueue
@@ -306,19 +306,19 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtWriteFile),                         // 0x00EC (236)
 	(uint32)PANIC(0x00ED),                                        // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                    // 0x00EE (238)
-	(uint32)PANIC(0x00EF),                                        // 0x00EF (239) ObCreateObject
+	(uint32)FUNC(&xboxkrnl::ObCreateObject),                      // 0x00EF (239)
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),           // 0x00F0 (240)
-	(uint32)PANIC(0x00F1),                                        // 0x00F1 (241) ObInsertObject
-	(uint32)PANIC(0x00F2),                                        // 0x00F2 (242) ObMakeTemporaryObject 
+	(uint32)FUNC(&xboxkrnl::ObInsertObject),                      // 0x00F1 (241)
+	(uint32)FUNC(&xboxkrnl::ObMakeTemporaryObject),               // 0x00F2 (242) 
 	(uint32)FUNC(&xboxkrnl::ObOpenObjectByName),                  // 0x00F3 (243)
-	(uint32)PANIC(0x00F4),                                        // 0x00F4 (244) ObOpenObjectByPointer
+	(uint32)FUNC(&xboxkrnl::ObOpenObjectByPointer),               // 0x00F4 (244)
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),            // 0x00F5 (245)
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),           // 0x00F6 (246)
-	(uint32)PANIC(0x00F7),                                        // 0x00F7 (247) ObReferenceObjectByName
-	(uint32)PANIC(0x00F8),                                        // 0x00F8 (248) ObReferenceObjectByPointer
+	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByName),             // 0x00F7 (247)
+	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByPointer),          // 0x00F8 (248)
 	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),        // 0x00F9 (249)
 	(uint32)FUNC(&xboxkrnl::ObfDereferenceObject),                // 0x00FA (250)
-	(uint32)PANIC(0x00FB),                                        // 0x00FB (251) ObfReferenceObject
+	(uint32)FUNC(&xboxkrnl::ObfReferenceObject),                  // 0x00FB (251)
 	(uint32)FUNC(&xboxkrnl::PhyGetLinkState),                     // 0x00FC (252)
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                       // 0x00FD (253)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),                // 0x00FE (254)
@@ -485,6 +485,6 @@ void ConnectWindowsTimersToThunkTable()
 	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
 	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
-	// Note that we can't do the same for TickCount, as that timer
-	// updates slower on the xbox. See EmuThreadUpdateTickCount().
+	// We can't point Xbox KeTickCount to host TickCount, because it
+	// updates slower on the xbox. See EmuUpdateTickCount().
 }

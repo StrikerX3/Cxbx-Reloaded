@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-OOVPA_NO_XREF(XapiInitProcess_1_0_5849, 8)
+OOVPA_NO_XREF(XapiInitProcess, 5849, 8)
 
         { 0x22, 0x6A },
         { 0x3E, 0x01 },
@@ -50,7 +50,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-OOVPA_NO_XREF(XGetDeviceChanges_1_0_5849, 7)
+OOVPA_NO_XREF(XGetDeviceChanges, 5849, 7)
 
         { 0x0C, 0x75 },
         { 0x1A, 0x53 },
@@ -64,7 +64,7 @@ OOVPA_END;
 // ******************************************************************
 // * GetThreadPriority
 // ******************************************************************
-OOVPA_NO_XREF(GetThreadPriority_1_0_5849, 7)
+OOVPA_NO_XREF(GetThreadPriority, 5849, 7)
 
         { 0x0D, 0xFF },
         { 0x16, 0x85 },
@@ -78,7 +78,7 @@ OOVPA_END;
 // ******************************************************************
 // * SetThreadPriorityBoost
 // ******************************************************************
-OOVPA_NO_XREF(SetThreadPriorityBoost_1_0_5849, 7)
+OOVPA_NO_XREF(SetThreadPriorityBoost, 5849, 7)
 
         { 0x07, 0xFF },
         { 0x10, 0xFF },
@@ -92,7 +92,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetSectionSize
 // ******************************************************************
-OOVPA_NO_XREF(XGetSectionSize_1_0_5849, 5)
+OOVPA_NO_XREF(XGetSectionSize, 5849, 5)
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },
@@ -101,10 +101,40 @@ OOVPA_NO_XREF(XGetSectionSize_1_0_5849, 5)
         { 0x08, 0x04 },
 OOVPA_END;
 
+//Xbe Explorer generated pattern, derived from address $0027927D in "EA SPORTS™ RUGBY 2005" :
+//558BEC83EC14536880153200FF15........8B0D........33DB3BCB7548538D 1F 4046 0124 _timeSetEvent@20 ^ 000ED __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003FR _CreateThread@24 ^ 0047D _timeSetEvent@20+0112 ^ 004DR _CloseHandle@4 ^ 005CD __imp__KeWaitForSingleObject@20 ^ 0062D _XapiMmTimerThreadState ^0082D _timeSetEvent@20+010F ^0090D _XapiMmTimerSerialNumber ^0097D _XapiMmTimerSerialNumber ^ 00C0R __allmul ^ 00CCD __imp__KeQueryInterruptTime@0 ^00E7D __imp__KeSetTimerEx@20 ^ 00ECD _XapiMmTimerThreadState ^ 00FBD __imp__KeSetEvent@12 ^0119D __imp__RtlLeaveCriticalSection@4
+OOVPA_NO_XREF(timeSetEvent, 5849, 9)
+	{0x00, 0x55},
+	{0x01, 0x8B},
+	{0x02, 0xEC},
+	{0x04, 0xEC},
+	{0x08, 0x80},
+	{0x0D, 0x15},
+	{0x12, 0x8B},
+	{0x13, 0x0D},
+	{0x18, 0x33}		
+OOVPA_END;
+
+//; Xbe Explorer generated pattern, derived from address $002793A1 in "EA SPORTS™ RUGBY 2005" :
+//5657BF8015320057FF15........8B54240C8B0D........0FB7C24885C9743E 1D AD12 006F _timeKillEvent@4 ^ 000AD __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003DD __imp__KeCancelTimer@4 ^ 0046D _XapiMmTimerThreadState ^ 0056D __imp__KeSetEvent@12 ^ 0064D __imp__RtlLeaveCriticalSection@4
+OOVPA_NO_XREF(timeKillEvent, 5849, 10)
+	{ 0x00, 0x56 },
+	{ 0x01, 0x57 },
+	{ 0x02, 0xBF },
+	{ 0x09, 0x15 },
+	{ 0x0E, 0x8B },
+	{ 0x0F, 0x54 },
+	{ 0x10, 0x24 },
+	{ 0x13, 0x0D },
+	{ 0x18, 0x0F },
+	{ 0x1F, 0x3E }
+OOVPA_END;
+
+
 // ******************************************************************
 // * RaiseException
 // ******************************************************************
-OOVPA_NO_XREF(RaiseException_1_0_5849, 7)
+OOVPA_NO_XREF(RaiseException, 5849, 7)
 
         { 0x09, 0x83 },
         { 0x14, 0x8B },
@@ -118,7 +148,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetDeviceEnumerationStatus
 // ******************************************************************
-OOVPA_NO_XREF(XGetDeviceEnumerationStatus_1_0_5849, 7)
+OOVPA_NO_XREF(XGetDeviceEnumerationStatus, 5849, 7)
 
         { 0x04, 0x15 },
         { 0x0A, 0x35 },
@@ -132,7 +162,7 @@ OOVPA_END;
 // ******************************************************************
 // * SwitchToThread
 // ******************************************************************
-OOVPA_NO_XREF(SwitchToThread_1_0_5849, 6)
+OOVPA_NO_XREF(SwitchToThread, 5849, 6)
 
         { 0x01, 0x15 },
         { 0x06, 0x33 },
@@ -143,63 +173,38 @@ OOVPA_NO_XREF(SwitchToThread_1_0_5849, 6)
 OOVPA_END;
 
 // ******************************************************************
-// * XAPI_1_0_5849
+// * XAPI_5849
 // ******************************************************************
-OOVPATable XAPI_1_0_5849[] = {
+OOVPATable XAPI_5849[] = {
 
-    // SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
-    // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
-    // XInitDevices (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_5233, XTL::EmuXInitDevices),
-    // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
-    // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
-    // XInputGetCapabilities (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_5558, XTL::EmuXInputGetCapabilities),
-    // XInputGetState (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_5558, XTL::EmuXInputGetState),
-    // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_5849, XTL::EmuXGetDeviceChanges),
-    /* obsolete?
-    // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup), //*/
-	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// GetThreadPriority
-	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_5849, XTL::EmuGetThreadPriority),
-	// SetThreadPriorityBoost
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_5849, XTL::EmuSetThreadPriorityBoost),
-	// GetThreadPriorityBoost
-    /*{
-	OOVPA_TABLE_PATCH(GetThreadPriorityBoost_1_0_5849, XTL::EmuGetThreadPriorityBoost),*/
-	// RaiseException
-	OOVPA_TABLE_PATCH(RaiseException_1_0_5849, XTL::EmuRaiseException),
-	// XLaunchNewImageA (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_5558, XTL::EmuXLaunchNewImage),
-	// XInputSetState (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XTL::EmuXInputSetState),
-	// XGetDeviceEnumerationStatus
-	OOVPA_TABLE_PATCH(XGetDeviceEnumerationStatus_1_0_5849, XTL::EmuXGetDeviceEnumerationStatus),
-	// SwitchToThread
-	/*
-	OOVPA_TABLE_PATCH(SwitchToThread_1_0_5849, XTL::EmuSwitchToThread),
-	*/
-	// XFormatUtilityDrive (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(XFormatUtilityDrive_1_0_4627, XTL::EmuXFormatUtilityDrive),
-	// CreateFiber
-	OOVPA_TABLE_PATCH(CreateFiber_1_0_5558, XTL::EmuCreateFiber),
-	// DeleteFiber
-	OOVPA_TABLE_PATCH(DeleteFiber_1_0_5558, XTL::EmuDeleteFiber),
-	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_5558, XTL::EmuSwitchToFiber),
-	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_5558, XTL::EmuConvertThreadToFiber),
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
+	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
+	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 5558, PATCH),
+	REGISTER_OOVPA(XInputGetState, 5558, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 5849, PATCH),
+	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 5849, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 5849, PATCH),
+	// REGISTER_OOVPA(GetThreadPriorityBoost, 5849, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 5849, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 5849, PATCH),
+	REGISTER_OOVPA(RaiseException, 5849, PATCH),
+	REGISTER_OOVPA(XLaunchNewImage, 5558, ALIAS, XLaunchNewImageA),
+	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
+	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 5849, PATCH),
+	// REGISTER_OOVPA(SwitchToThread, 5849, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4627, PATCH),
+	REGISTER_OOVPA(CreateFiber, 5558, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 5558, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 5558, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 5558, PATCH),
 };
 
 // ******************************************************************
-// * XAPI_1_0_5849_SIZE
+// * XAPI_5849_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_5849_SIZE = sizeof(XAPI_1_0_5849);
+uint32 XAPI_5849_SIZE = sizeof(XAPI_5849);

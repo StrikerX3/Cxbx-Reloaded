@@ -35,13 +35,13 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup_1_0_3911, 9,
+OOVPA_XREF(XNetStartup, 3911, 9,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // XNetStartup+0x07 : call [XnInit]
-        { 0x07, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : push 0
         { 0x00, 0x6A }, // (Offset,Value)-Pair #2
@@ -61,13 +61,13 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup_1_0_3911, 11,
+OOVPA_XREF(WSAStartup, 3911, 11,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // WSAStartup+0x07 : call [XnInit]
-        { 0x07, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x01 : push 1; xor ebx, ebx
         { 0x01, 0x6A }, // (Offset,Value)-Pair #2
@@ -87,7 +87,7 @@ OOVPA_END;
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_3911, 11,
+OOVPA_XREF(XnInit, 3911, 11,
 
     XREF_XNINIT,
     XRefZero)
@@ -113,7 +113,7 @@ OOVPA_END;
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_3911, 8)
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
 
         // XNetGetEthernetLinkStatus+0x12 : cmpxchg [ecx], edx
         { 0x12, 0x0F }, // (Offset,Value)-Pair #1
@@ -133,21 +133,17 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_3911, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XNet_1_0_3911
+// * XNet_3911
 // ******************************************************************
-OOVPATable XNet_1_0_3911[] = {
+OOVPATable XNet_3911[] = {
 
-    // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_3911, XTL::EmuXNetStartup),
-	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_3911, XTL::EmuWSAStartup),
-    // XnInit (XREF)
-	OOVPA_TABLE_XREF(XnInit_1_0_3911),
-    // XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_3911, XTL::EmuXNetGetEthernetLinkStatus),
+	REGISTER_OOVPA(XNetStartup, 3911, PATCH),
+	REGISTER_OOVPA(WSAStartup, 3911, PATCH),
+	REGISTER_OOVPA(XnInit, 3911, XREF),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
 };
 
 // ******************************************************************
-// * XNet_1_0_3911_SIZE
+// * XNet_3911_SIZE
 // ******************************************************************
-uint32 XNet_1_0_3911_SIZE = sizeof(XNet_1_0_3911);
+uint32 XNet_3911_SIZE = sizeof(XNet_3911);
