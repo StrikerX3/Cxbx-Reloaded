@@ -202,22 +202,33 @@ typedef long                            NTSTATUS;
 #define PAGE_WRITECOMBINE      0x400
 
 // ******************************************************************
+// * MEM Masks
+// ******************************************************************
+#define MEM_COMMIT                  0x1000      
+#define MEM_RESERVE                 0x2000      
+#define MEM_DECOMMIT                0x4000      
+#define MEM_RELEASE                 0x8000      
+#define MEM_FREE                    0x10000     
+#define MEM_PRIVATE                 0x20000     
+#define MEM_MAPPED                  0x40000     
+//#define MEM_RESET                 0x80000     
+#define MEM_TOP_DOWN                0x100000     
+#define MEM_WRITE_WATCH             0x200000    
+#define MEM_PHYSICAL                0x400000    
+#define MEM_NOZERO                  0x800000 // Replaces MEM_ROTATE on WinXP+
+//#define MEM_IMAGE                 0x1000000 // Declare like below, to prevent warning C4005: 'MEM_IMAGE': macro redefinition
+#define SEC_IMAGE                   0x1000000     
+#define MEM_IMAGE                   SEC_IMAGE    
+
+// ******************************************************************
 // * memory
 // ******************************************************************
 
-// Define virtual base and alternate virtual base of kernel.
-#define KSEG0_BASE                  0x80000000
-
-// Define virtual base addresses for physical memory windows.
-#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
-
-#define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
-#define MM_64M_PHYSICAL_PAGE        0x04000
-#define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
-
-#define MM_INSTANCE_PAGE_COUNT      16
-
 #define PAGE_SHIFT                  12
+
+// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
+#define PAGE_SIZE                   (1 << PAGE_SHIFT)
+#define PAGE_MASK                   (PAGE_SIZE - 1)
 
 // Convert a physical frame number to its corresponding physical address.
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
@@ -1015,8 +1026,7 @@ typedef struct _IO_STATUS_BLOCK
     {
         NTSTATUS Status;
         PVOID    Pointer;
-    }
-    u1;
+	};
 
     ULONG_PTR Information;
 }
@@ -1273,10 +1283,12 @@ KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doe
 // ******************************************************************
 // EVENT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _EVENT_BASIC_INFORMATION {
+typedef struct _EVENT_BASIC_INFORMATION
+{
 	EVENT_TYPE EventType;
 	LONG EventState;
-} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+}
+EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 // ******************************************************************
 // KSEMAPHORE
@@ -1291,19 +1303,23 @@ KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 // ******************************************************************
 // SEMAPHORE_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _SEMAPHORE_BASIC_INFORMATION {
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	LONG MaximumCount;
-} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+}
+SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
 // ******************************************************************
 // MUTANT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _MUTANT_BASIC_INFORMATION {
+typedef struct _MUTANT_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	BOOLEAN OwnedByCaller;
 	BOOLEAN AbandonedState;
-} MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+}
+MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
 // ******************************************************************
 // ERWLOCK
@@ -1522,54 +1538,84 @@ typedef struct _KDPC
 KDPC, *PKDPC;
 
 // ******************************************************************
+// * KFLOATING_SAVE
+// ******************************************************************
+// See NtDll::FLOATING_SAVE_AREA
+typedef struct _KFLOATING_SAVE
+{
+	ULONG   ControlWord;
+	ULONG   StatusWord;
+	// NtDll contains ULONG TagWord here
+	ULONG   ErrorOffset;
+	ULONG   ErrorSelector;
+	ULONG   DataOffset;
+	ULONG   DataSelector;
+	ULONG   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
+	ULONG   Spare1; // NtDll calls this Spare0
+}
+KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+// ******************************************************************
 // * KOBJECTS
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	MutantObject = 2,
+	QueueObject = 4,
+	SemaphoreObject = 5,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
-    DpcObject = 0x13,
+	ApcObject = 0x12,
+	DpcObject = 0x13,
 }
 KOBJECTS, *PKOBJECTS;
 
 // ******************************************************************
-// * KINTERRUPR
+// * PKNORMAL_ROUTINE
 // ******************************************************************
-typedef struct _KINTERRUPT
-{
-	/* 0x0/0 */ PVOID ServiceRoutine;
-	/* 0x4/4 */ PVOID ServiceContext;
-	/* 0x8/8 */ ULONG BusInterruptLevel;
-	/* 0xC/12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
-	/* 0x10/16 */ UCHAR Connected;
-	/* 0x11/17 */ UCHAR ShareVector;
-	/* 0x12/18 */ CHAR Mode;
-	/* 0x14/20 */ CHAR rsvd1;
-	/* 0x14/20 */ ULONG ServiceCount;
-	/* 0x18/24 */ ULONG DispatchCode[22]; // Was : unsigned char     ISR[0x58];
-}
-KINTERRUPT, *PKINTERRUPT;
+typedef VOID (*PKNORMAL_ROUTINE)
+(
+	IN PVOID NormalContext,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2
+);
+
+// ******************************************************************
+// * PKKERNEL_ROUTINE
+// ******************************************************************
+typedef VOID (*PKKERNEL_ROUTINE)
+(
+	IN struct _KAPC *Apc,
+	IN OUT PKNORMAL_ROUTINE *NormalRoutine,
+	IN OUT PVOID *NormalContext,
+	IN OUT PVOID *SystemArgument1,
+	IN OUT PVOID *SystemArgument2
+);
+
+// ******************************************************************
+// * PKRUNDOWN_ROUTINE
+// ******************************************************************
+typedef VOID (*PKRUNDOWN_ROUTINE)
+(
+	IN struct _KAPC *Apc
+);
+
+// ******************************************************************
+// * PKSYNCHRONIZE_ROUTINE
+// ******************************************************************
+typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)
+(
+	IN PVOID SynchronizeContext
+);
 
 // ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef BOOLEAN KSERVICE_ROUTINE
+typedef BOOLEAN (*PKSERVICE_ROUTINE)
 (
-	IN PKINTERRUPT Interrupt,
+	IN struct _KINTERRUPT *Interrupt,
 	IN PVOID ServiceContext
 );
-
-typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
-
-// ******************************************************************
-// * IRQL (* same as on win *)
-// ******************************************************************
-typedef UCHAR KIRQL, *PKIRQL;
-	
-#define DISPATCH_LEVEL 2
-
-#define PROFILE_LEVEL 27
-
 
 // ******************************************************************
 // * KINTERRUPT_MODE
@@ -1580,6 +1626,47 @@ typedef enum _KINTERRUPT_MODE
 	Latched,
 }
 KINTERRUPT_MODE;
+
+// ******************************************************************
+// * IRQ (Interrupt ReQuest) Priority Levels
+// ******************************************************************
+#define DISPATCH_LEVEL 2
+#define PROFILE_LEVEL 27
+
+#define DISPATCH_SIZE 22
+
+// ******************************************************************
+// * KINTERRUPR
+// ******************************************************************
+typedef struct _KINTERRUPT
+{
+	/* 0x00= 0 */ PKSERVICE_ROUTINE ServiceRoutine;
+	/* 0x04= 4 */ PVOID ServiceContext;
+	/* 0x08= 8 */ ULONG BusInterruptLevel;
+	/* 0x0C=12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
+	/* 0x10=16 */ BOOLEAN Connected;
+	/* 0x11=17 */ BOOLEAN ShareVector;
+	/* 0x12=18 */ KINTERRUPT_MODE Mode;
+	/* 0x14=20 */ ULONG ServiceCount;
+	/* 0x18=24 */ ULONG DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
+}
+KINTERRUPT, *PKINTERRUPT;
+
+// ******************************************************************
+// * IRQL (Interrupt ReQuest Level) (* same as on win *)
+// ******************************************************************
+typedef UCHAR KIRQL, *PKIRQL;
+
+// ******************************************************************
+// * PS_STATISTICS
+// ******************************************************************
+typedef struct _PS_STATISTICS
+{
+	ULONG Length;
+	ULONG ThreadCount;
+	ULONG HandleCount;
+}
+PS_STATISTICS, *PPS_STATISTICS;
 
 // ******************************************************************
 // * RTL_CRITICAL_SECTION
@@ -1797,13 +1884,13 @@ KWAIT_BLOCK, *PKWAIT_BLOCK;
 typedef struct _KAPC
 {
 	/* 0x0/0 */ USHORT Type;
-	/* 0x2/2 */ UCHAR ApcMode;
-	/* 0x3/3 */ UCHAR Inserted;
+	/* 0x2/2 */ KPROCESSOR_MODE ApcMode;
+	/* 0x3/3 */ BOOLEAN Inserted;
 	/* 0x4/4 */ PKTHREAD Thread;
 	/* 0x8/8 */ LIST_ENTRY ApcListEntry;
-	/* 0x10/16 */ PVOID KernelRoutine;
-	/* 0x14/20 */ PVOID RundownRoutine;
-	/* 0x18/24 */ PVOID NormalRoutine;
+	/* 0x10/16 */ PKKERNEL_ROUTINE KernelRoutine;
+	/* 0x14/20 */ PKRUNDOWN_ROUTINE RundownRoutine;
+	/* 0x18/24 */ PKNORMAL_ROUTINE NormalRoutine;
 	/* 0x1C/28 */ PVOID NormalContext;
 	/* 0x20/32 */ PVOID SystemArgument1;
 	/* 0x24/36 */ PVOID SystemArgument2;
@@ -1984,7 +2071,92 @@ typedef struct _XBOX_HARDWARE_INFO
 XBOX_HARDWARE_INFO;
 
 const int XBOX_KEY_LENGTH = 16;
+const int ALTERNATE_SIGNATURE_COUNT = 16;
 typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
+
+// ******************************************************************
+// * XBOX_ENCRYPTED_SETTINGS
+// ******************************************************************
+typedef struct _XBOX_ENCRYPTED_SETTINGS
+{
+	UCHAR Checksum[20];
+	UCHAR Confounder[8];
+	UCHAR HDKey[XBOX_KEY_LENGTH];
+	ULONG GameRegion;
+}
+XBOX_ENCRYPTED_SETTINGS;
+
+// ******************************************************************
+// * XBOX_FACTORY_SETTINGS
+// ******************************************************************
+typedef struct _XBOX_FACTORY_SETTINGS
+{
+	ULONG Checksum;
+	UCHAR SerialNumber[12];
+	UCHAR EthernetAddr[6];
+	UCHAR Reserved1[2];
+	UCHAR OnlineKey[16];
+	ULONG AVRegion;
+	ULONG Reserved2;
+}
+XBOX_FACTORY_SETTINGS;
+
+// ******************************************************************
+// * XBOX_TIMEZONE_DATE
+// ******************************************************************
+typedef struct _XBOX_TIMEZONE_DATE
+{
+	UCHAR Month;
+	UCHAR Day;
+	UCHAR DayOfWeek;
+	UCHAR Hour;
+}
+XBOX_TIMEZONE_DATE;
+
+// ******************************************************************
+// * XBOX_USER_SETTINGS
+// ******************************************************************
+#define TIME_ZONE_NAME_LENGTH 4
+typedef struct _XBOX_USER_SETTINGS
+{
+	ULONG Checksum;
+	LONG TimeZoneBias;
+	CHAR TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
+	CHAR TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
+	ULONG Reserved1[2];
+	XBOX_TIMEZONE_DATE TimeZoneStdDate;
+	XBOX_TIMEZONE_DATE TimeZoneDltDate;
+	ULONG Reserved2[2];
+	LONG TimeZoneStdBias;
+	LONG TimeZoneDltBias;
+	ULONG Language;
+	ULONG VideoFlags;
+	ULONG AudioFlags;
+	ULONG ParentalControlGames;
+	ULONG ParentalControlPassword;
+	ULONG ParentalControlMovies;
+	ULONG OnlineIpAddress;
+	ULONG OnlineDnsAddress;
+	ULONG OnlineDefaultGatewayAddress;
+	ULONG OnlineSubnetMask;
+	ULONG MiscFlags;
+	ULONG DvdRegion;
+}
+XBOX_USER_SETTINGS;
+
+// ******************************************************************
+// * XBOX_EEPROM
+// ******************************************************************
+typedef struct _XBOX_EEPROM
+{
+	XBOX_ENCRYPTED_SETTINGS EncryptedSettings;
+	XBOX_FACTORY_SETTINGS FactorySettings;
+	XBOX_USER_SETTINGS UserSettings;
+	UCHAR Unused[58];
+	UCHAR UEMInfo[4];
+	UCHAR Reserved1[2];
+}
+XBOX_EEPROM;
 
 // ******************************************************************
 // * TIME_FIELDS

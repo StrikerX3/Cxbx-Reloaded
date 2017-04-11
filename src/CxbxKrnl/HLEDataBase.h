@@ -40,7 +40,9 @@
 #include "HLEDataBase/Xapi.1.0.4361.h"
 #include "HLEDataBase/Xapi.1.0.4432.h"
 #include "HLEDataBase/Xapi.1.0.4627.h"
+#include "HLEDataBase/Xapi.1.0.5028.h"
 #include "HLEDataBase/Xapi.1.0.5233.h"
+#include "HLEDataBase/Xapi.1.0.5344.h"
 #include "HLEDataBase/Xapi.1.0.5558.h"
 #include "HLEDataBase/Xapi.1.0.5788.h"
 #include "HLEDataBase/Xapi.1.0.5849.h"
@@ -50,7 +52,9 @@
 #include "HLEDataBase/D3D8.1.0.4361.h"
 #include "HLEDataBase/D3D8.1.0.4432.h"
 #include "HLEDataBase/D3D8.1.0.4627.h"
+#include "HLEDataBase/D3D8.1.0.5028.h"
 #include "HLEDataBase/D3D8.1.0.5233.h"
+#include "HLEDataBase/D3D8.1.0.5344.h"
 #include "HLEDataBase/D3D8.1.0.5558.h"
 #include "HLEDataBase/D3D8.1.0.5788.h"
 #include "HLEDataBase/D3D8.1.0.5849.h"
@@ -60,7 +64,9 @@
 #include "HLEDataBase/DSound.1.0.4361.h"
 #include "HLEDataBase/DSound.1.0.4432.h"
 #include "HLEDataBase/DSound.1.0.4627.h"
+#include "HLEDataBase/DSound.1.0.5028.h"
 #include "HLEDataBase/DSound.1.0.5233.h"
+#include "HLEDataBase/DSound.1.0.5344.h"
 #include "HLEDataBase/DSound.1.0.5558.h"
 #include "HLEDataBase/DSound.1.0.5788.h"
 #include "HLEDataBase/DSound.1.0.5849.h"
@@ -69,14 +75,18 @@
 #include "HLEDataBase/XG.1.0.4361.h"
 #include "HLEDataBase/XG.1.0.4432.h"
 #include "HLEDataBase/XG.1.0.4627.h"
+#include "HLEDataBase/XG.1.0.5028.h"
 #include "HLEDataBase/XG.1.0.5233.h"
+#include "HLEDataBase/XG.1.0.5344.h"
 #include "HLEDataBase/XG.1.0.5558.h"
 #include "HLEDataBase/XG.1.0.5788.h"
 #include "HLEDataBase/XG.1.0.5849.h"
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
 #include "HLEDataBase/XOnline.1.0.4627.h"
+#include "HLEDataBase/XOnline.1.0.5028.h"
 #include "HLEDataBase/XOnline.1.0.5233.h"
+#include "HLEDataBase/XOnline.1.0.5344.h"
 #include "HLEDataBase/XOnline.1.0.5558.h"
 #include "HLEDataBase/XOnline.1.0.5788.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
@@ -122,7 +132,9 @@ extern const uint32 HLEDataBaseCount;
 enum XRefDataBaseOffset
 {
     XREF_D3DDEVICE=0,
-    XREF_DXSRSCULLMODE,
+    XREF_SETRENDERSTATE_CULLMODE,
+	XREF_D3DRS_CULLMODE,
+	XREF_D3DTSS_TEXCOORDINDEX,
     XREF_D3DRS_MULTISAMPLEMODE,
     XREF_D3DRS_MULTISAMPLERENDERTARGETMODE,
     XREF_D3DRS_ROPZCMPALWAYSREAD,
@@ -341,6 +353,7 @@ enum XRefDataBaseOffset
 
 #define XREF_ADDR_UNDETERMINED -1
 #define XREF_ADDR_NOT_FOUND ((xbaddr)nullptr)
+#define XREF_ADDR_DERIVE 1
 
 // ******************************************************************
 // * XRefDataBase

@@ -184,7 +184,7 @@ OOVPATable XAPI_5849[] = {
 	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 5558, PATCH),
 	REGISTER_OOVPA(XInputGetState, 5558, PATCH),
-	REGISTER_OOVPA(XGetDeviceChanges, 5849, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 5849, DISABLED),
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 5849, PATCH),
@@ -198,10 +198,11 @@ OOVPATable XAPI_5849[] = {
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 5849, PATCH),
 	// REGISTER_OOVPA(SwitchToThread, 5849, PATCH),
 	REGISTER_OOVPA(XFormatUtilityDrive, 4627, PATCH),
-	REGISTER_OOVPA(CreateFiber, 5558, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 5558, PATCH),
-	REGISTER_OOVPA(SwitchToFiber, 5558, PATCH),
-	REGISTER_OOVPA(ConvertThreadToFiber, 5558, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

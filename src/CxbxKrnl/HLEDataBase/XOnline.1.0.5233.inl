@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_NO_XREF(XNetStartup, 5344, 8)
+OOVPA_NO_XREF(XNetStartup, 5233, 8)
 
         { 0x01, 0xC0 },
         { 0x04, 0x50 },
@@ -50,12 +50,12 @@ OOVPA_END;
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-#define XNetGetEthernetLinkStatus_5344 XNetGetEthernetLinkStatus_4627
+#define XNetGetEthernetLinkStatus_5233 XNetGetEthernetLinkStatus_4627
 
 // ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
-OOVPA_XREF(CXo_XOnlineLogon, 5344, 8,
+OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
 
     XREF_CXo_XOnlineLogon,
     XRefZero)
@@ -73,7 +73,7 @@ OOVPA_END;
 // ******************************************************************
 // * XOnlineLogon
 // ******************************************************************
-OOVPA_XREF(XOnlineLogon, 5344, 8,
+OOVPA_XREF(XOnlineLogon, 5233, 8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -94,16 +94,16 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5233[] = {
 
-	REGISTER_OOVPA(XNetStartup, 5344, PATCH),
+	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(XnInit, 4627, XREF),
 	// REGISTER_OOVPA(socket, 4361, EMUTHIS),
 	REGISTER_OOVPA(bind, 4361, EMUTHIS),
 	// REGISTER_OOVPA(listen, 4361, EMUTHIS),
 	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5344, PATCH),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 5344, XREF),
-	REGISTER_OOVPA(XOnlineLogon, 5344, PATCH),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5233, PATCH),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 5233, XREF),
+	REGISTER_OOVPA(XOnlineLogon, 5233, PATCH),
 };
 
 // ******************************************************************

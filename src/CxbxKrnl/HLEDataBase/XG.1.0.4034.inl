@@ -117,8 +117,8 @@ OOVPATable XG_4034[] = {
 	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
 	// REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
     // REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH),
-	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
-	// REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
+	REGISTER_OOVPA(XGSwizzleBox, 3911, DISABLED),
+	// REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, DISABLED),
 };
 
 // ******************************************************************

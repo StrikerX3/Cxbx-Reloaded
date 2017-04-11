@@ -39,11 +39,12 @@
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
+#include <commctrl.h>
 
-// This variable *MUST* be this large, for it to take up address space so
-// that all other code and data in this module are placed outside of the
-// maximum emulated memory range.
-unsigned char emulated_memory_placeholder[EMU_MAX_MEMORY_SIZE];
+// Enable Visual Styles
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name = 'Microsoft.Windows.Common-Controls' version = '6.0.0.0' \
+processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
 
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -58,20 +59,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-    /*! verify CxbxKrnl.dll is the same version as Cxbx.exe */
-    if(!CxbxKrnlVerifyVersion(_CXBX_VERSION))
-    {
-        MessageBox(NULL, "CxbxKrnl.dll is the incorrect version", "Cxbx-Reloaded", MB_OK);
-        return 1;
-    }
+    /*! initialize shared memory */
+    EmuShared::Init();
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
 		CxbxKrnlMain(__argc, __argv);
 		return 0;
 	}
 
-    /*! initialize shared memory */
-    EmuShared::Init();
+	INITCOMMONCONTROLSEX icc;
+	icc.dwSize = sizeof(icc);
+	icc.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&icc);
 
     WndMain *MainWindow = new WndMain(hInstance);
 

@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
+#include "MemoryManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -65,16 +66,16 @@ XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl =
 
 XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 {
-    &XTL::EMUPATCH(CDirectSoundStream_AddRef),         // 0x00
-    &XTL::EMUPATCH(CDirectSoundStream_Release),        // 0x04
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_AddRef),         // 0x00
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_Release),        // 0x04
 /*
     STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
 */
-	&XTL::EMUPATCH(CDirectSoundStream_GetInfo),        // 0x08
-    &XTL::EMUPATCH(CDirectSoundStream_GetStatus),      // 0x0C
-    &XTL::EMUPATCH(CDirectSoundStream_Process),        // 0x10
-    &XTL::EMUPATCH(CDirectSoundStream_Discontinuity),  // 0x14
-    &XTL::EMUPATCH(CDirectSoundStream_Flush),          // 0x18
+	&XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetInfo),        // 0x08
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetStatus),      // 0x0C
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_Process),        // 0x10
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_Discontinuity),  // 0x14
+    &XTL::EMUPATCH(DirectSound_CDirectSoundStream_Flush),          // 0x18
     0xBEEFB003,                                 // 0x1C
     0xBEEFB004,                                 // 0x20
     0xBEEFB005,                                 // 0x24
@@ -312,16 +313,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_AddRef
+// * patch: IDirectSound_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSound8_AddRef)
+ULONG WINAPI XTL::EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_AddRef\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_AddRef\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -335,16 +336,16 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound8_AddRef)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_Release
+// * patch: IDirectSound_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSound8_Release)
+ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_Release\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_Release\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -363,9 +364,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound8_Release)
 }
 
 // ******************************************************************
-// * patch: CDirectSound_GetSpeakerConfig
+// * patch: DirectSound_CDirectSound_GetSpeakerConfig
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound         *pThis,
     PDWORD                  pdwSpeakerConfig
@@ -373,7 +374,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSound_GetSpeakerConfig\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSound_GetSpeakerConfig\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pdwSpeakerConfig          : 0x%.08X\n"
@@ -413,22 +414,22 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_EnableHeadphones)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SynchPlayback
+// * patch: IDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SynchPlayback)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SynchPlayback\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SynchPlayback\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
            pThis);
 
-    EmuWarning("EmuIDirectSound8_SynchPlayback ignored");
+    EmuWarning("EmuIDirectSound_SynchPlayback ignored");
 
     
 
@@ -436,9 +437,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SynchPlayback)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_DownloadEffectsImage
+// * patch: IDirectSound_DownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_DownloadEffectsImage)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8          pThis,
     LPCVOID                 pvImageBuffer,
@@ -449,7 +450,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_DownloadEffectsImage)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_DownloadEffectsImage\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_DownloadEffectsImage\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pvImageBuffer             : 0x%.08X\n"
@@ -484,9 +485,9 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetOrientation
+// * patch: IDirectSound_SetOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetOrientation)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           xFront,
@@ -500,7 +501,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetOrientation)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SetOrientation\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SetOrientation\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   xFront                    : %f\n"
@@ -521,9 +522,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetOrientation)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetDistanceFactor
+// * patch: IDirectSound_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDistanceFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDistanceFactor,
@@ -532,7 +533,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDistanceFactor)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SetDistanceFactor\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SetDistanceFactor\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fDistanceFactor           : %f\n"
@@ -548,9 +549,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDistanceFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetRolloffFactor
+// * patch: IDirectSound_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetRolloffFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fRolloffFactor,
@@ -559,7 +560,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetRolloffFactor)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SetRolloffFactor\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SetRolloffFactor\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fRolloffFactor            : %f\n"
@@ -575,9 +576,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetRolloffFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetDopplerFactor
+// * patch: IDirectSound_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDopplerFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDopplerFactor,
@@ -586,7 +587,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDopplerFactor)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SetDopplerFactor\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SetDopplerFactor\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fDopplerFactor            : %f\n"
@@ -602,16 +603,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDopplerFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetI3DL2Listener
+// * patch: IDirectSound_SetI3DL2Listener
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetI3DL2Listener)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pDummy, // TODO: fill this out
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_SetI3DL2Listener\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_SetI3DL2Listener\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pDummy                    : 0x%.08X\n"
@@ -625,16 +626,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetI3DL2Listener)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetMixBinHeadroom
+// * patch: IDirectSound_SetMixBinHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetMixBinHeadroom)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
     DWORD                   dwHeadroom
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_SetMixBinHeadroom\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_SetMixBinHeadroom\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   dwMixBinMask              : 0x%.08X\n"
@@ -648,15 +649,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetMixBinHeadroom)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetMixBins
+// * patch: IDirectSoundBuffer_SetMixBins
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBins)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetMixBins\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBins\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
@@ -669,15 +670,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBins)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBinVolumes)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBinVolumes\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
@@ -690,9 +691,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetPosition
+// * patch: IDirectSound_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetPosition)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -701,7 +702,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetPosition)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_SetPosition\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -717,9 +718,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetPosition)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetPosition
+// * patch: IDirectSound_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetVelocity)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -728,7 +729,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetVelocity)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_SetVelocity\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -744,16 +745,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetVelocity)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetAllParameters
+// * patch: IDirectSound_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetAllParameters)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_SetAllParameters\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_SetAllParameters\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pTodo                     : 0x%.08X\n"
@@ -767,14 +768,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetAllParameters)
 }
 
 // ******************************************************************
-// * patch: CDirectSound_CommitDeferredSettings
+// * patch: DirectSound_CDirectSound_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSound_CommitDeferredSettings)
 (
     X_CDirectSound         *pThis
 )
 {
-    DbgPrintf("EmuDSound: EmuCDirectSound_CommitDeferredSettings\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSound_CommitDeferredSettings\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -803,7 +804,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     DWORD dwEmuFlags = 0;
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
 	DSBUFFERDESC *pDSBufferDescSpecial = NULL;
 	bool bIsSpecial = false;
 
@@ -828,7 +829,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         if(pdsbd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
 
             if(pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM)
@@ -868,8 +869,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
 			// TODO: A better response to this scenario if possible.
 
-			pDSBufferDescSpecial = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
-			pDSBufferDescSpecial->lpwfxFormat =  (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+			pDSBufferDescSpecial = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
+			pDSBufferDescSpecial->lpwfxFormat =  (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX));
 
 			//memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
 		    //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
@@ -886,7 +887,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 		    pDSBufferDescSpecial->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY; 
 		    pDSBufferDescSpecial->dwBufferBytes = 3 * pDSBufferDescSpecial->lpwfxFormat->nAvgBytesPerSec;
 
-	//		pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
+	//		pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
 
 	////	pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
 	//		pDSBufferDesc->lpwfxFormat->nChannels = 1;
@@ -958,9 +959,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateBuffer
+// * patch: IDirectSound_CreateBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateBuffer)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdssd,
@@ -968,7 +969,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateBuffer)
     PVOID                   pUnknown
 )
 {
-       DbgPrintf("EmuDSound: EmuIDirectSound8_CreateBuffer\n"
+       DbgPrintf("EmuDSound: EmuIDirectSound_CreateBuffer\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pdssd                     : 0x%.08X\n"
@@ -983,9 +984,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateBuffer)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateSoundBuffer
+// * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateSoundBuffer)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdsbd,
@@ -993,7 +994,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateSoundBuffer)
     LPUNKNOWN               pUnkOuter
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_CreateSoundBuffer\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_CreateSoundBuffer\n"
                "(\n"
                "   pdsbd                     : 0x%.08X\n"
                "   ppBuffer                  : 0x%.08X\n"
@@ -1005,9 +1006,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateSoundBuffer)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetBufferData
+// * patch: IDirectSoundBuffer_SetBufferData
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetBufferData)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 (
     X_CDirectSoundBuffer   *pThis,
     LPVOID                  pvBufferData,
@@ -1016,7 +1017,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetBufferData)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetBufferData\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetBufferData\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pvBufferData              : 0x%.08X\n"
@@ -1035,9 +1036,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetBufferData)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetPlayRegion
+// * patch: IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPlayRegion)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwPlayStart,
@@ -1046,7 +1047,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPlayRegion)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetPlayRegion\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetPlayRegion\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwPlayStart               : 0x%.08X\n"
@@ -1059,15 +1060,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPlayRegion)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    
+	// pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayStart)
 
     return DS_OK;
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_Lock
+// * patch: IDirectSoundBuffer_Lock
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Lock)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwOffset,
@@ -1081,7 +1082,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Lock)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_Lock\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Lock\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwOffset                  : 0x%.08X\n"
@@ -1128,9 +1129,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Lock)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetHeadroom
+// * patch: IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetHeadroom)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 (
     X_CDirectSoundBuffer  *pThis,
     DWORD                  dwHeadroom
@@ -1138,7 +1139,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetHeadroom)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetHeadroom\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetHeadroom\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwHeadroom                : 0x%.08X\n"
@@ -1153,9 +1154,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetHeadroom)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetLoopRegion
+// * patch: IDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLoopRegion)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwLoopStart,
@@ -1164,7 +1165,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLoopRegion)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetLoopRegion\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetLoopRegion\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwLoopStart               : 0x%.08X\n"
@@ -1183,16 +1184,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLoopRegion)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_Release
+// * patch: IDirectSoundBuffer_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Release)
+ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
 (
     X_CDirectSoundBuffer   *pThis
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_Release\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Release\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -1216,9 +1217,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Release)
 				}
 
 				if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-					CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
+					g_MemoryManager.Free(pThis->EmuBufferDesc->lpwfxFormat);
 
-				CxbxFree(pThis->EmuBufferDesc);
+				g_MemoryManager.Free(pThis->EmuBufferDesc);
 
 				delete pThis;
 			}
@@ -1231,9 +1232,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Release)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetPitch
+// * patch: IDirectSoundBuffer_SetPitch
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPitch)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 (
     X_CDirectSoundBuffer   *pThis,
     LONG                    lPitch
@@ -1241,7 +1242,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPitch)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetPitch\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetPitch\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   lPitch                    : 0x%.08X\n"
@@ -1256,9 +1257,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPitch)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_GetStatus
+// * patch: IDirectSoundBuffer_GetStatus
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetStatus)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     X_CDirectSoundBuffer   *pThis,
     LPDWORD                 pdwStatus
@@ -1266,7 +1267,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetStatus)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_GetStatus\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_GetStatus\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pdwStatus                 : 0x%.08X\n"
@@ -1290,9 +1291,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetStatus)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetCurrentPosition
+// * patch: IDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetCurrentPosition)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwNewPosition
@@ -1300,7 +1301,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetCurrentPosition)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetCurrentPosition\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetCurrentPosition\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwNewPosition             : 0x%.08X\n"
@@ -1319,9 +1320,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetCurrentPosition)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_GetCurrentPosition
+// * patch: IDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetCurrentPosition)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 (
     X_CDirectSoundBuffer   *pThis,
     PDWORD                  pdwCurrentPlayCursor,
@@ -1330,7 +1331,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetCurrentPosition)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_GetCurrentPosition\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_GetCurrentPosition\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pdwCurrentPlayCursor      : 0x%.08X\n"
@@ -1363,9 +1364,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetCurrentPosition)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_Play
+// * patch: IDirectSoundBuffer_Play
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Play)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwReserved1,
@@ -1375,7 +1376,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Play)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_Play\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Play\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwReserved1               : 0x%.08X\n"
@@ -1431,16 +1432,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Play)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_Stop
+// * patch: IDirectSoundBuffer_Stop
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Stop)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 (
     X_CDirectSoundBuffer   *pThis
 )
 {
-    
-
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_Stop\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Stop\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -1448,17 +1447,20 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Stop)
 
 	HRESULT hRet = D3D_OK;
     
-	if (pThis != nullptr) {
-		hRet = pThis->EmuDirectSoundBuffer8->Stop();
-	}
+	if (pThis != nullptr)
+		if (pThis->EmuDirectSoundBuffer8 != nullptr) {
+			// TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+			hRet = pThis->EmuDirectSoundBuffer8->Stop();
+			pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+		}
    
     return hRet;
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_StopEx
+// * patch: IDirectSoundBuffer_StopEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_StopEx)
+extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     X_CDirectSoundBuffer *pBuffer,
     REFERENCE_TIME        rtTimeStamp,
@@ -1467,7 +1469,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_StopEx)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_StopEx\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_StopEx\n"
            "(\n"
            "   pBuffer                   : 0x%.08X\n"
            "   rtTimeStamp               : 0x%.08X\n"
@@ -1486,9 +1488,9 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_StopEx)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetVolume
+// * patch: IDirectSoundBuffer_SetVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVolume)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
     X_CDirectSoundBuffer   *pThis,
     LONG                    lVolume
@@ -1496,7 +1498,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVolume)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetVolume\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetVolume\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   lVolume                   : 0x%.08X\n"
@@ -1515,29 +1517,29 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVolume)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetFrequency
+// * patch: IDirectSoundBuffer_SetFrequency
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFrequency)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwFrequency
 )
 {
-    
-
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetFrequency\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetFrequency\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwFrequency               : 0x%.08X\n"
            ");\n",
            pThis, dwFrequency);
 
-//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
+    HRESULT hRet = S_OK;
 
-    
+	if (pThis != NULL)
+		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO : Test SetFrequency :
+			hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
-//    return hRet;
-    return S_OK;
+	return hRet;
 }
 
 // ******************************************************************
@@ -1561,7 +1563,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
 
     // convert from Xbox to PC DSound
     {
@@ -1579,7 +1581,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         if(pdssd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX));
             memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
         }
 
@@ -1681,9 +1683,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateStream
+// * patch: IDirectSound_CreateSoundStream
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateStream)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC         *pdssd,
@@ -1691,7 +1693,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateStream)
     PVOID                   pUnknown
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_CreateStream\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_CreateSoundStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pdssd                     : 0x%.08X\n"
@@ -1717,30 +1719,38 @@ VOID WINAPI XTL::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetVolume
+// * patch: DirectSound_CDirectSoundStream_SetVolume
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)(X_CDirectSoundStream *pThis, LONG lVolume)
+ULONG WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetVolume)
+(
+	X_CDirectSoundStream *pThis, 
+	LONG lVolume
+)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetVolume\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetVolume\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   lVolume                   : %d\n"
            ");\n",
            pThis, lVolume);
 
-    // TODO: Actually SetVolume
+	ULONG ret = DS_OK;
+	
+	if (pThis != NULL)
+		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
+		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO : Test SetVolume
+			ret = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
 
-    
-
-    return DS_OK;
+    return ret;
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetRolloffFactor
+// * patch: DirectSound_CDirectSoundStream_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetRolloffFactor)
 (
     X_CDirectSoundStream *pThis,
     FLOAT                 fRolloffFactor,
@@ -1749,7 +1759,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetRolloffFactor\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetRolloffFactor\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fRolloffFactor            : %f\n"
@@ -1765,13 +1775,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_AddRef
+// * patch: DirectSound_CDirectSoundStream_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis)
+ULONG WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_AddRef)
+(
+	X_CDirectSoundStream *pThis
+)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_AddRef\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_AddRef\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -1787,13 +1800,16 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThi
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_Release
+// * patch: DirectSound_CDirectSoundStream_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis)
+ULONG WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Release)
+(
+	X_CDirectSoundStream *pThis
+)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_Release\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Release\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -1815,9 +1831,9 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pTh
             }
 
             if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-                CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
+                g_MemoryManager.Free(pThis->EmuBufferDesc->lpwfxFormat);
 
-            CxbxFree(pThis->EmuBufferDesc);
+            g_MemoryManager.Free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1829,9 +1845,9 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pTh
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_GetInfo
+// * patch: DirectSound_CDirectSoundStream_GetInfo
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetInfo)
 (
 	X_CDirectSoundStream*	pThis, 
 	LPXMEDIAINFO			pInfo
@@ -1839,7 +1855,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_GetInfo\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_GetInfo\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pInfo                     : 0x%.08X\n"
@@ -1847,7 +1863,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
            pThis, pInfo);
 
 	// TODO: A (real) implementation?
-	EmuWarning("EmuCDirectSoundStream_GetInfo is not yet supported!");
+	EmuWarning("EmuDirectSound_CDirectSoundStream_GetInfo is not yet supported!");
 
 	if( pInfo )
 	{
@@ -1863,9 +1879,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_GetStatus
+// * patch: DirectSound_CDirectSoundStream_GetStatus
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream   *pThis,
     DWORD                  *pdwStatus
@@ -1873,14 +1889,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_GetStatus\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_GetStatus\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pdwStatus                 : 0x%.08X\n"
            ");\n",
            pThis, pdwStatus);
 
-    EmuWarning("EmuCDirectSoundStream_GetStatus is not yet implemented");
+    EmuWarning("EmuDirectSound_CDirectSoundStream_GetStatus is not yet implemented");
 
     *pdwStatus = DSBSTATUS_PLAYING;
 
@@ -1890,9 +1906,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_Process
+// * patch: DirectSound_CDirectSoundStream_Process
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Process)
 (
     X_CDirectSoundStream   *pThis,
     PXMEDIAPACKET           pInputBuffer,
@@ -1901,7 +1917,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_Process\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Process\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pInputBuffer              : 0x%.08X\n"
@@ -1933,13 +1949,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_Discontinuity
+// * patch: DirectSound_CDirectSoundStream_Discontinuity
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)(X_CDirectSoundStream *pThis)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Discontinuity)
+(
+	X_CDirectSoundStream *pThis
+)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_Discontinuity\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Discontinuity\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            ");\n",
@@ -1953,13 +1972,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)(X_CDirectSoundStr
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_Flush
+// * patch: DirectSound_CDirectSoundStream_Flush
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pThis)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Flush)
+(
+	X_CDirectSoundStream *pThis
+)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_Flush\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Flush\n"
 		   "(\n"
 		   "   pThis           : 0x%.08X\n"
 		   ");\n",
@@ -1973,13 +1995,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pTh
 }
 
 // ******************************************************************
-// * patch: CDirectSound_SynchPlayback
+// * patch: DirectSound_CDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSound_SynchPlayback)(PVOID pUnknown)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSound_SynchPlayback\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSound_SynchPlayback\n"
 		   "(\n"
 		   "   pUnknown           : 0x%.08X\n"
 		   ");\n",
@@ -1991,24 +2013,28 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_Pause
+// * patch: DirectSound_CDirectSoundStream_Pause
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 (
-    PVOID   pStream,
+    X_CDirectSoundStream *pThis,
     DWORD   dwPause
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_Pause\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Pause\n"
            "(\n"
-           "   pStream                   : 0x%.08X\n"
+           "   pThis                     : 0x%.08X\n"
            "   dwPause                   : 0x%.08X\n"
            ");\n",
-           pStream, dwPause);
+		pThis, dwPause);
 
-    
+	if (pThis != NULL)
+		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
+		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO: Test Pause (emulated via Stop)
+			pThis->EmuDirectSoundBuffer8->Stop();
 
     return DS_OK;
 }
@@ -2039,11 +2065,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetConeAngles
+// * patch: DirectSound_CDirectSoundStream_SetConeAngles
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetConeAngles)
 (
-    PVOID   pThis,
+    PVOID   pThis, // X_CDirectSoundStream *pThis
     DWORD   dwInsideConeAngle,
     DWORD   dwOutsideConeAngle,
     DWORD   dwApply
@@ -2051,7 +2077,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetConeAngles\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetConeAngles\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwInsideConeAngle         : 0x%.08X\n"
@@ -2068,18 +2094,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetConeOutsideVolume
+// * patch: DirectSound_CDirectSoundStream_SetConeOutsideVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetConeOutsideVolume)
 (
-    PVOID   pThis,
+    PVOID   pThis, // X_CDirectSoundStream *pThis
     LONG    lConeOutsideVolume,
     DWORD   dwApply
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetConeOutsideVolume\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetConeOutsideVolume\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   lConeOutsideVolume        : %d\n"
@@ -2095,18 +2121,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetAllParameters
+// * patch: DirectSound_CDirectSoundStream_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetAllParameters)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     PVOID    pUnknown,
     DWORD    dwApply
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetAllParameters\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetAllParameters\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pUnknown                  : %f\n"
@@ -2122,18 +2148,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMaxDistance
+// * patch: DirectSound_CDirectSoundStream_SetMaxDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMaxDistance)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     D3DVALUE fMaxDistance,
     DWORD    dwApply
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetMaxDistance\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetMaxDistance\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fMaxDistance              : %f\n"
@@ -2149,18 +2175,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMinDistance
+// * patch: DirectSound_CDirectSoundStream_SetMinDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMinDistance)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     D3DVALUE fMinDistance,
     DWORD    dwApply
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetMinDistance\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetMinDistance\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   fMinDistance              : %f\n"
@@ -2176,11 +2202,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetVelocity
+// * patch: DirectSound_CDirectSoundStream_SetVelocity
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetVelocity)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2189,7 +2215,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetVelocity\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetVelocity\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   x                         : %f\n"
@@ -2207,11 +2233,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetConeOrientation
+// * patch: DirectSound_CDirectSoundStream_SetConeOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetConeOrientation)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2220,7 +2246,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetConeOrientation\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetConeOrientation\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   x                         : %f\n"
@@ -2238,11 +2264,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetPosition
+// * patch: DirectSound_CDirectSoundStream_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetPosition)
 (
-    PVOID    pThis,
+    PVOID    pThis, // X_CDirectSoundStream *pThis
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2251,7 +2277,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetPosition\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetPosition\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   x                         : %f\n"
@@ -2269,17 +2295,17 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetFrequency
+// * patch: DirectSound_CDirectSoundStream_SetFrequency
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetFrequency)
 (
-    PVOID   pThis,
+    PVOID   pThis, // X_CDirectSoundStream *pThis
     DWORD   dwFrequency
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetFrequency\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetFrequency\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwFrequency               : %d\n"
@@ -2321,17 +2347,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetI3DL2Source)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBins
+// * patch: DirectSound_CDirectSoundStream_SetMixBins
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMixBins)
 (
-    PVOID   pThis,
+    PVOID   pThis, // X_CDirectSoundStream *pThis
     PVOID   pMixBins
 )
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetMixBins\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetMixBins\n"
             "(\n"
             "   pThis                     : 0x%.08X\n"
             "   pMixBins                  : 0x%.08X\n"
@@ -2372,16 +2398,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Unknown1)
 
 // s+
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetMaxDistance
+// * patch: IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMaxDistance)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flMaxDistance,
     DWORD                   dwApply
 )
 {
-	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetMaxDistance\n"
+	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMaxDistance\n"
 		"(\n"
 		"   pThis                     : 0x%.08X\n"
 		"   flMaxDistance             : %f\n"
@@ -2395,16 +2421,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMaxDistance)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetMinDistance
+// * patch: IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMinDistance)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flMinDistance,
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetMinDistance\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMinDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flMinDistance             : %f\n"
@@ -2418,16 +2444,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMinDistance)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetRolloffFactor
+// * patch: IDirectSoundBuffer_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flRolloffFactor,
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetRolloffFactor\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetRolloffFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flRolloffFactor           : %f\n"
@@ -2441,16 +2467,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetDistanceFactor
+// * patch: IDirectSoundBuffer_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDistanceFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flDistanceFactor,
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetDistanceFactor\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetDistanceFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flDistanceFactor          : %f\n"
@@ -2464,9 +2490,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDistanceFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetConeAngles
+// * patch: IDirectSoundBuffer_SetConeAngles
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeAngles)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     DWORD                   dwInsideConeAngle,
@@ -2474,7 +2500,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeAngles)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetConeAngles\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetConeAngles\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   dwInsideConeAngle         : 0x%.08X\n"
@@ -2490,9 +2516,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeAngles)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetConeOrientation
+// * patch: IDirectSoundBuffer_SetConeOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOrientation)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2501,7 +2527,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOrientation)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetConeOrientation\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetConeOrientation\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2517,16 +2543,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOrientation)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetConeOutsideVolume
+// * patch: IDirectSoundBuffer_SetConeOutsideVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOutsideVolume)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     LONG                    lConeOutsideVolume,
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   lConeOutsideVolume        : 0x%.08X\n"
@@ -2540,9 +2566,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOutsideVolume)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetPosition
+// * patch: IDirectSoundBuffer_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPosition)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2551,7 +2577,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPosition)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetPosition\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2567,9 +2593,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPosition)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetVelocity
+// * patch: IDirectSoundBuffer_SetVelocity
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVelocity)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2578,7 +2604,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVelocity)
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetVelocity\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2594,9 +2620,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVelocity)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetDopplerFactor
+// * patch: IDirectSoundBuffer_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDopplerFactor)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flDopplerFactor,
@@ -2604,7 +2630,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDopplerFactor)
 )
 {
         
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flDopplerFactor           : %f\n"
@@ -2619,9 +2645,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDopplerFactor)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetI3DL2Source
+// * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetI3DL2Source)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     LPCDSI3DL2BUFFER        pds3db,
@@ -2629,7 +2655,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetI3DL2Source)
 )
 {
         
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetI3DL2Source\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetI3DL2Source\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pds3db                    : 0x%.08X\n"
@@ -2644,9 +2670,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetI3DL2Source)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetMode
+// * patch: IDirectSoundBuffer_SetMode
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMode)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMode)
 (
     X_CDirectSoundBuffer   *pBuffer,
     DWORD                   dwMode,
@@ -2655,7 +2681,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMode)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetFormat\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetFormat\n"
            "(\n"
            "   pBuffer             : 0x%.08X\n"
            "   dwMode              : 0x%.08X\n"
@@ -2665,7 +2691,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMode)
 
     HRESULT hRet = DS_OK;
 
-    EmuWarning("EmuIDirectSoundBuffer8_SetMode ignored");
+    EmuWarning("EmuIDirectSoundBuffer_SetMode ignored");
 
     
 
@@ -2674,9 +2700,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMode)
 
 // +s
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetFormat
+// * patch: IDirectSoundBuffer_SetFormat
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFormat)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 (
     X_CDirectSoundBuffer *pBuffer,
     LPCWAVEFORMATEX pwfxFormat
@@ -2684,7 +2710,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFormat)
 {
     
 
-        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetFormat\n"
+        DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetFormat\n"
                "(\n"
                "   pBuffer                   : 0x%.08X\n"
                "   pwfxFormat                : 0x%.08X\n"
@@ -2716,9 +2742,9 @@ STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetLFO
+// * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLFO)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO)
 (
     LPDIRECTSOUNDBUFFER  pThis,
     LPCDSLFODESC         pLFODesc
@@ -2726,7 +2752,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLFO)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetLFO\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetLFO\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pLFODesc                  : 0x%.08X\n"
@@ -2736,6 +2762,31 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLFO)
     // TODO: Implement
 
     
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * patch: DirectSound_CDirectSoundStream_SetLFO
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
+(
+	X_CDirectSoundStream *pThis,
+    LPCDSLFODESC         pLFODesc
+)
+{
+    
+
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetLFO\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pLFODesc                  : 0x%.08X\n"
+           ");\n",
+           pThis, pLFODesc);
+
+    // TODO: Implement
+
+    EmuWarning("EmuDirectSound_CDirectSoundStream_SetLFO not yet implemented!");
 
     return S_OK;
 }
@@ -2774,9 +2825,9 @@ VOID WINAPI XTL::EMUPATCH(XAudioCreateAdpcmFormat)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetRolloffCurve
+// * patch: IDirectSoundBuffer_SetRolloffCurve
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffCurve)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
     LPDIRECTSOUNDBUFFER  pThis,
     const FLOAT         *pflPoints,
@@ -2786,7 +2837,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffCurve)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetRolloffCurve\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetRolloffCurve\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pflPoints                 : 0x%.08X\n"
@@ -2852,9 +2903,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_AddRef
+// * patch: IDirectSoundBuffer_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_AddRef)
+ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 (
     X_CDirectSoundBuffer   *pThis
 )
@@ -2889,9 +2940,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_AddRef)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_Pause
+// * patch: IDirectSoundBuffer_Pause
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Pause)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 (
     X_CDirectSoundBuffer   *pThis,
 	DWORD					dwPause
@@ -2979,9 +3030,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Pause)
 //}
 
 // ******************************************************************
-// * patch: IDirectSound8_GetOutputLevels
+// * patch: IDirectSound_GetOutputLevels
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetOutputLevels)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 (
 	LPDIRECTSOUND8		   *pThis,
 	X_DSOUTPUTLEVELS	   *pOutputLevels,
@@ -2990,7 +3041,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetOutputLevels)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuIDirectSound8_GetOutputLevels\n"
+	DbgPrintf("EmuDSound: EmuIDirectSound_GetOutputLevels\n"
 			"(\n"
 			"	pThis					: 0x%.08X\n"
 			"   pOutputLevels           : 0x%.08X\n"
@@ -3006,9 +3057,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetOutputLevels)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetEG
+// * patch: DirectSound_CDirectSoundStream_SetEG
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetEG)
 (
 	LPVOID		pThis,
 	LPVOID		pEnvelopeDesc
@@ -3016,7 +3067,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetEG\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetEG\n"
 			"(\n"
 			"	pThis					: 0x%.08X\n"
 			"   pEnvelopeDesc           : 0x%.08X\n"
@@ -3074,9 +3125,9 @@ extern "C" HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_FlushEx)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMode
+// * patch: DirectSound_CDirectSoundStream_SetMode
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMode)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMode)
 (
     X_CDirectSoundStream   *pStream,
     DWORD                   dwMode,
@@ -3085,7 +3136,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMode)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetFormat\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetFormat\n"
            "(\n"
            "   pStream             : 0x%.08X\n"
            "   dwMode              : 0x%.08X\n"
@@ -3095,7 +3146,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMode)
 
     HRESULT hRet = DS_OK;
 
-    EmuWarning("EmuCDirectSoundStream_SetMode ignored");
+    EmuWarning("EmuDirectSound_CDirectSoundStream_SetMode ignored");
 
     
 
@@ -3130,9 +3181,9 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetFilter
+// * patch: IDirectSoundBuffer_SetFilter
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFilter)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFilter)
 (
 	LPVOID			pThis,
 	X_DSFILTERDESC* pFilterDesc
@@ -3140,7 +3191,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFilter)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetFilter\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetFilter\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
 		   "   pFilterDesc         : 0x%.08X\n"
@@ -3149,7 +3200,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFilter)
 
 	// TODO: Implement
 
-	EmuWarning("IDirectSoundBuffer8_SetFilter not yet supported!");
+	EmuWarning("IDirectSoundBuffer_SetFilter not yet supported!");
 
 		
 
@@ -3157,9 +3208,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFilter)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetFilter
+// * patch: DirectSound_CDirectSoundStream_SetFilter
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetFilter)
 (
 	X_CDirectSoundStream*	pThis,
 	X_DSFILTERDESC*			pFilterDesc
@@ -3167,7 +3218,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetFilter\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetFilter\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
 		   "   pFilterDesc         : 0x%.08X\n"
@@ -3185,9 +3236,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_PlayEx
+// * patch: IDirectSoundBuffer_PlayEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_PlayEx)
+extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
     X_CDirectSoundBuffer *pBuffer,
     REFERENCE_TIME        rtTimeStamp,
@@ -3196,7 +3247,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_PlayEx)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_PlayEx\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_PlayEx\n"
            "(\n"
            "   pBuffer                   : 0x%.08X\n"
            "   rtTimeStamp               : 0x%.08X\n"
@@ -3219,9 +3270,9 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_PlayEx)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_GetCaps
+// * patch: IDirectSound_GetCaps
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetCaps)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 (
 	X_CDirectSound*	pThis,
     X_DSCAPS*		pDSCaps
@@ -3229,7 +3280,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetCaps)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_GetCaps\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_GetCaps\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
 		   "   pDSCaps             : 0x%.08X\n"
@@ -3262,7 +3313,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetCaps)
 // ******************************************************************
 // * patch: IDirectSoundStream_SetPitch
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetPitch)
 (	
 	X_CDirectSoundStream*	pThis,
     LONG					lPitch
@@ -3311,9 +3362,9 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes
+// * patch: DirectSound_CDirectSoundStream_SetMixBinVolumes
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMixBinVolumes)
 (
 	X_CDirectSoundStream*	pThis,
     DWORD					dwMixBinMask,
@@ -3322,7 +3373,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetMixBinVolumes\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetMixBinVolumes\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
 		   "   dwMixBinMask        : 0x%.08X\n"
@@ -3339,9 +3390,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes2
+// * patch: DirectSound_CDirectSoundStream_SetMixBinVolumes2
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetMixBinVolumes2)
 (
 	X_CDirectSoundStream*	pThis,
     LPVOID					pMixBins
@@ -3349,7 +3400,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetMixBinVolumes\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetMixBinVolumes\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
 		   "   pMixBins            : 0x%.08X\n"
@@ -3364,9 +3415,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetI3DL2Source
+// * patch: DirectSound_CDirectSoundStream_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
     PVOID   pds3db,
@@ -3375,7 +3426,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetI3DL2Source\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetI3DL2Source\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pds3db                    : 0x%.08X\n"
@@ -3391,9 +3442,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetI3DL2Source
+// * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetAllParameters)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
 	X_CDirectSoundBuffer*	pThis,
     VOID*					pcDs3dBuffer,
@@ -3402,7 +3453,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetAllParameters)
 {
 	
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetAllParameters\n"
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetAllParameters\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pds3db                    : 0x%.08X\n"
@@ -3418,9 +3469,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetAllParameters)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream::SetFormat
+// * patch: DirectSound_CDirectSoundStream::SetFormat
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetFormat)
 (
 	X_CDirectSoundStream*	pThis,
     LPCWAVEFORMATEX			pwfxFormat
@@ -3428,7 +3479,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetFormat\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetFormat\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pwfxFormat                : 0x%.08X\n"
@@ -3450,9 +3501,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetOutputBuffer
+// * patch: IDirectSoundBuffer_SetOutputBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetOutputBuffer)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 (
 	X_CDirectSoundBuffer*	pThis,
     X_CDirectSoundBuffer*	pOutputBuffer
@@ -3460,7 +3511,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetOutputBuffer)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetOutputBuffer\n"
+	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetOutputBuffer\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pOutputBuffer             : 0x%.08X\n"
@@ -3475,9 +3526,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetOutputBuffer)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetOutputBuffer
+// * patch: DirectSound_CDirectSoundStream_SetOutputBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetOutputBuffer)
 (
 	X_CDirectSoundStream*	pThis,
 	X_CDirectSoundBuffer*	pOutputBuffer
@@ -3485,7 +3536,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetOutputBuffer\n"
+	DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetOutputBuffer\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pOutputBuffer             : 0x%.08X\n"
@@ -3552,9 +3603,9 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetEG
+// * patch: IDirectSoundBuffer_SetEG
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetEG)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetEG)
 (
 	X_CDirectSoundBuffer*	pThis,
     LPVOID					pEnvelopeDesc
@@ -3562,7 +3613,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetEG)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetEG\n"
+	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetEG\n"
            "(\n"
 		   "   pThis                     : 0x%.08X\n"
            "   pEnvelopeDesc             : 0x%.08X\n"
@@ -3577,9 +3628,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetEG)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_GetEffectData
+// * patch: IDirectSound_GetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetEffectData)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 (
 	X_CDirectSound*	pThis,
     DWORD			dwEffectIndex,
@@ -3590,7 +3641,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetEffectData)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuIDirectSound8_GetEffectData\n"
+	DbgPrintf("EmuDSound: EmuIDirectSound_GetEffectData\n"
            "(\n"
 		   "   pThis                     : 0x%.08X\n"
            "   dwEffectIndex             : 0x%.08X\n"
@@ -3602,7 +3653,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetEffectData)
 
 	// TODO: Implement
 	if( !pvData )
-		pvData = CxbxMalloc( dwDataSize );
+		pvData = g_MemoryManager.Allocate( dwDataSize );
 
 		
 
@@ -3610,9 +3661,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetEffectData)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer8_SetNotificationPositions
+// * patch: IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetNotificationPositions)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 (
 	X_CDirectSoundBuffer*	pThis,
     DWORD					dwNotifyCount,
@@ -3621,7 +3672,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetNotificationPositions)
 {
 		
 
-	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer8_SetNotificationPositions\n"
+	DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetNotificationPositions\n"
            "(\n"
 		   "   pThis                     : 0x%.08X\n"
            "   dwNotifyCount             : 0x%.08X\n"
@@ -3642,7 +3693,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetNotificationPositions)
 	{
 		if( pThis->EmuDirectSoundBuffer8 )
 		{
-			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) pNotify );
+			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) &pNotify );
 			if( SUCCEEDED( hr ) && pNotify != nullptr )
 			{
 				hr = pNotify->SetNotificationPositions( dwNotifyCount, paNotifies );
@@ -3662,9 +3713,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetNotificationPositions)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream::SetRolloffCurve
+// * patch: DirectSound_CDirectSoundStream::SetRolloffCurve
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetRolloffCurve)
 (
 	X_CDirectSoundBuffer	*pThis,
     const FLOAT				*pflPoints,
@@ -3674,7 +3725,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 {
     
 
-    DbgPrintf("EmuDSound: EmuCDirectSoundStream_SetRolloffCurve\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetRolloffCurve\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   pflPoints                 : 0x%.08X\n"
@@ -3691,9 +3742,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_SetEffectData
+// * patch: IDirectSound_SetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetEffectData)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 (
 	LPVOID pThis,
     DWORD dwEffectIndex,
@@ -3705,7 +3756,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetEffectData)
 {
 	
 
-    DbgPrintf("EmuDSound: EmuIDirectSound8_SetEffectData\n"
+    DbgPrintf("EmuDSound: EmuIDirectSound_SetEffectData\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwEfectIndex              : 0x%.08X\n"

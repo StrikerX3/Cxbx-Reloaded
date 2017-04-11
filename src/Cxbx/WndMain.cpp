@@ -34,11 +34,12 @@
 // *
 // ******************************************************************
 #include "WndMain.h"
-#include "WndAbout.h"
+#include "DlgAbout.h"
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
+#include "CxbxVersion.h"
 
 #include <io.h>
 
@@ -296,9 +297,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
 
-                    char AsciiTitle[255];
+                    char AsciiTitle[MAX_PATH];
 
-                    sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s...", m_Xbe->m_szAsciiTitle);
+					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
 
                     SetWindowText(m_hwnd, AsciiTitle);
 
@@ -1015,15 +1016,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_HELP_ABOUT:
                 {
-                    WndAbout *AboutWnd = new WndAbout(m_hInstance, m_hwnd);
-
-                    while(!AboutWnd->HasError() && AboutWnd->ProcessMessages())
-                        Sleep(10);
-
-                    if(AboutWnd->HasError())
-                        MessageBox(m_hwnd, AboutWnd->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-
-                    delete AboutWnd;
+					ShowAboutDialog(hwnd);
                 }
                 break;
 
@@ -1526,10 +1519,10 @@ void WndMain::StartEmulation(HWND hwndParent)
 {
     char szBuffer[MAX_PATH];
 
-    // register xbe path with CxbxKrnl.dll
+    // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
-	// register LLE flags with CxbxKrnl.dll
+	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 
 	// shell exe

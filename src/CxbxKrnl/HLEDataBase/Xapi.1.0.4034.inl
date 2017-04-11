@@ -172,21 +172,24 @@ OOVPATable XAPI_4034[] = {
 */
 	// REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
 	// REGISTER_OOVPA(CloseHandle, (???, PATCH)),
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
-	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, DISABLED),
 	REGISTER_OOVPA(XID_fCloseDevice, 3911, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

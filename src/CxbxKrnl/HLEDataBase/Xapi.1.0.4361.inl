@@ -341,7 +341,7 @@ OOVPATable XAPI_4361[] = {
 
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
-	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, DISABLED),
 	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
 	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
@@ -350,15 +350,20 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
     // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4134, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 4134, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 4134, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

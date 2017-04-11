@@ -44,11 +44,13 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 #include "ResourceTracker.h" // For g_AlignCache
+#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -61,22 +63,14 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-// xLaunchDataPage, pointed to by LaunchDataPage
-xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
-{
-	{   // header
-		2,  // 2: dashboard, 0: title
-		0,
-		"D:\\default.xbe",
-		0
-	}
-};
-
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
-// TODO : Should the kernel point to xLaunchDataPage directly??
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
+// Note : Originally, LaunchDataPage resides in a "STICKY" segment in
+// the xbox kernel. Kernel code accessses this as a normal variable.
+// XAPI code however, reference to the address of this kernel variable,
+// thus use indirection (*LaunchDataPage) to get to the same contents.
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -96,6 +90,8 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, PAGE_READWRITE);
 }
 
+#define PAGE_KNOWN_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_NOCACHE | PAGE_WRITECOMBINE)
+
 // ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx()
 // ******************************************************************
@@ -113,30 +109,31 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(LowestAcceptableAddress)
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
-		LOG_FUNC_ARG(ProtectionType)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 		LOG_FUNC_END;
 
-	if(Alignment == 0)
-		Alignment = 0x1000; // page boundary at least
-	//
-	// NOTE: Kludgey (but necessary) solution:
-	//
-	// Since this memory must be aligned on a page boundary, we must allocate an extra page
-	// so that we can return a valid page aligned pointer
-	//
+	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
 
-	// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-	PVOID pRet = CxbxMalloc(NumberOfBytes + Alignment);
+	if (Alignment < PAGE_SIZE)
+		Alignment = PAGE_SIZE; // page boundary at least
 
-	// align to page boundary
+	// Only known flags are allowed
+	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
+		pRet = NULL;
+
+	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
+	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
+		pRet = NULL;
+
+	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
+	if ((ProtectionType & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) == (PAGE_NOCACHE | PAGE_WRITECOMBINE))
+		pRet = NULL;
+
+	// Allocate when input arguments are valid
+	if (pRet != NULL)
 	{
-		DWORD dwRet = (DWORD)pRet;
-
-		dwRet += Alignment - dwRet % Alignment;
-
-		g_AlignCache.insert(dwRet, pRet);
-
-		pRet = (PVOID)dwRet;
+		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
+		pRet = g_MemoryManager.AllocateContiguous(NumberOfBytes, Alignment);
 	}
 
 	RETURN(pRet);
@@ -157,7 +154,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 		LOG_FUNC_END;
 
 	// TODO: should this be aligned?
-	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
 
 	RETURN(pRet);
 }
@@ -182,7 +179,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
 		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
 
-	EmuWarning("*NumberOfPaddingBytes = 0x%08X", *NumberOfPaddingBytes);
+	DbgPrintf("MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
 
 	if (NumberOfBytes != MAXULONG_PTR)
 	{
@@ -286,29 +283,18 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	PVOID OrigBaseAddress = BaseAddress;
-
-	if (g_AlignCache.exists(BaseAddress))
-	{
-		OrigBaseAddress = g_AlignCache.get(BaseAddress);
-
-		g_AlignCache.remove(BaseAddress);
+	if (BaseAddress == &DefaultLaunchDataPage) {
+		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
+		LOG_IGNORED();
+		return;
 	}
 
-	if (OrigBaseAddress != &xLaunchDataPage)
-	{
-		// TODO : Free PAGE_WRITECOMBINE differently
-		CxbxFree(OrigBaseAddress);
-	}
-	else
-	{
-		DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
-	}
+	g_MemoryManager.Free(BaseAddress);
 
-  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
-  // Tracing in assembly shows the crash takes place quite a while further, so it's probably
-  // not related to this call per-se. The strangest thing is, that if we let the debugger step
-  // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
+	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
+	// not related to this call per-se. The strangest thing is, that if we let the debugger step
+	// all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
 }
 
 // ******************************************************************
@@ -325,7 +311,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_END;
 
-	CxbxFree(BaseAddress);
+	g_MemoryManager.Free(BaseAddress);
 
 	RETURN(STATUS_SUCCESS);
 }
@@ -345,6 +331,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
+	LOG_INCOMPLETE();
 
 	// We emulate Virtual/Physical memory 1:1	
 	return (PHYSICAL_ADDRESS)BaseAddress;
@@ -426,7 +413,8 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_END;
 
 	// TODO: should this be aligned?
-	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
+	LOG_INCOMPLETE();
 
 	RETURN(pRet);
 }
@@ -447,8 +435,30 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(Persist)
 		LOG_FUNC_END;
 
-	// TODO: Actually set this up to be remember across a "reboot"
-	LOG_IGNORED();
+	if (BaseAddress == LaunchDataPage)
+	{
+		if (Persist)
+		{
+			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
+			if (fp)
+			{
+				DbgPrintf("Persisting LaunchDataPage\n");
+				fseek(fp, 0, SEEK_SET);
+				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
+				fclose(fp);
+			}
+			else
+				DbgPrintf("Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+		}
+		else
+		{
+			DbgPrintf("Forgetting LaunchDataPage\n");
+			remove(szFilePath_LaunchDataPage_bin);
+		}
+	}
+	else
+		// TODO : Store/forget other pages to be remembered across a "reboot"
+		LOG_IGNORED();
 
   // [PatrickvL] Shared memory would be a perfect fit for this,
   // but the supplied pointer is already allocated. In order to
@@ -475,10 +485,13 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 
 	// Assume read/write when page is allocated :
 	ULONG Result = PAGE_NOACCESS;
-	if (EmuCheckAllocationSize(VirtualAddress, false))
-		Result = PAGE_READWRITE;
 
-	// TODO : Improve this implementation
+	if (g_MemoryManager.IsAllocated(VirtualAddress)) {
+		Result = PAGE_READWRITE;
+	}
+
+	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
+	
 	RETURN(Result);
 }
 
@@ -492,8 +505,9 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	// TODO : Free PAGE_WRITECOMBINE differently
-	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
+	LOG_INCOMPLETE(); // TODO : Free PAGE_WRITECOMBINE differently
+
+	ULONG uiSize = g_MemoryManager.QueryAllocationSize(BaseAddress);
 
 	RETURN(uiSize);
 }
@@ -512,7 +526,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
 
-	if (MemoryStatistics->Length == 0x24)
+	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
 		GlobalMemoryStatus(&MemoryStatus);
 		GetSystemInfo(&SysInfo);
@@ -595,7 +609,8 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_END;
 
-	CxbxFree(BaseAddress);
+	g_MemoryManager.Free(BaseAddress);
+	LOG_INCOMPLETE();
 
 	RETURN(STATUS_SUCCESS);
 }

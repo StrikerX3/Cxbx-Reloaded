@@ -44,7 +44,9 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
+#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -55,6 +57,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
+#include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
@@ -124,8 +127,9 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 		LOG_FUNC_END;
 
-	// TODO: Actually implement this
-	PVOID pRet = CxbxCalloc(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
+	PVOID pRet = g_MemoryManager.AllocateZeroed(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
+	
+	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
 
 	RETURN(pRet);
 }
@@ -154,23 +158,26 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 {
 	LOG_FUNC_ONE_ARG(P);
 
-	CxbxFree(P);
+	g_MemoryManager.Free(P);
 }
 
 // ******************************************************************
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	ReadWriteLock->LockCount = -1;
+	ReadWriteLock->WritersWaitingCount = 0;
+	ReadWriteLock->ReadersWaitingCount = 0;
+	ReadWriteLock->ReadersEntryCount = 0;
+	KeInitializeEvent(&ReadWriteLock->WriterEvent, SynchronizationEvent, FALSE);
+	KeInitializeSemaphore(&ReadWriteLock->ReaderSemaphore, 0, MAXLONG);
 }
 
 // ******************************************************************
@@ -281,53 +288,6 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	RETURN(ret);
 }
 
-// TODO: Make these configurable or autodetect of some sort :
-DWORD EEPROM_XboxLanguage = 0x01;  // = English
-DWORD EEPROM_XboxVideo = 0x10;  // = Letterbox
-DWORD EEPROM_XboxAudio = 0;  // = Stereo, no AC3, no DTS
-DWORD EEPROM_ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-DWORD EEPROM_ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
-DWORD EEPROM_XboxMisc = 0;  // No automatic power down
-DWORD EEPROM_XboxFactoryAvRegion = 0x01; // = NTSC_M
-DWORD EEPROM_XboxFactoryGameRegion = 1; // = North America
-
-typedef struct EEPROMInfo {
-	xboxkrnl::XC_VALUE_INDEX index;
-	PVOID value_addr;
-	DWORD value_type;
-	DWORD value_length;
-} EEPROMInfo;
-
-#define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
-
-static const EEPROMInfo EEPROMInfos[] = {
-	{ xboxkrnl::XC_LANGUAGE,            &EEPROM_XboxLanguage,          REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_VIDEO,               &EEPROM_XboxVideo,             REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_AUDIO,               &EEPROM_XboxAudio,             REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_P_CONTROL_GAMES,     &EEPROM_ParentalControlGames,  REG_DWORD, sizeof(DWORD) }, // Zapper queries this. TODO : Should this be REG_NONE?
-	{ xboxkrnl::XC_P_CONTROL_MOVIES,    &EEPROM_ParentalControlMovies, REG_DWORD, sizeof(DWORD) }, // Xbox Dashboard queries this.
-	{ xboxkrnl::XC_MISC,                &EEPROM_XboxMisc,              REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_FACTORY_AV_REGION,   &EEPROM_XboxFactoryAvRegion,   REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_FACTORY_GAME_REGION, &EEPROM_XboxFactoryGameRegion, REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_MAX_OS,              nullptr
-	// This is called to return a complete XBOX_USER_SETTINGS structure
-	//
-	// One example is from XapipQueryTimeZoneInformation(, REG_DWORD, sizeof(DWORD), where it is used to
-	// detect the local timezone information.
-	},
-	// TODO : XC_MAX_ALL, XC_ENCRYPTED_SECTION
-	{ XC_END_MARKER }
-};
-
-const EEPROMInfo* FindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
-{
-	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)
-		if (EEPROMInfos[i].index == index)
-			return &EEPROMInfos[i];
-
-	return nullptr;
-}
-
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
@@ -348,41 +308,57 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		LOG_FUNC_ARG_OUT(ResultLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS Status = STATUS_SUCCESS;
+	void * value_addr = nullptr;
+	int value_type;
+	int result_length;
 
 	// handle eeprom read
-	const EEPROMInfo* info = FindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
-	if (info != nullptr)
+	if (ValueIndex == XC_FACTORY_GAME_REGION)
 	{
-		if (info->value_addr == nullptr)
-			LOG_UNIMPLEMENTED();
-		else
-		{
-			DWORD result_length = info->value_length; // sizeof(DWORD);
-
-			if (ResultLength != nullptr)
-				*ResultLength = result_length;
-
-			if (ValueLength < result_length)
-				ret = STATUS_BUFFER_TOO_SMALL;
-			else
-			{
-				// Set the output value type :
-				*Type = info->value_type; // REG_DWORD;
-				// Clear the output value buffer :
-				memset(Value, 0, ValueLength);
-				// Copy the emulated EEPROM value into the output value buffer :
-				memcpy(Value, info->value_addr, result_length);
-			}
-		}
+		value_addr = &XboxFactoryGameRegion;
+		value_type = REG_DWORD;
+		result_length = sizeof(ULONG);
 	}
 	else
-	{	
-		LOG_UNIMPLEMENTED();
-		ret = STATUS_OBJECT_NAME_NOT_FOUND;
+	{
+		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+		if (info != nullptr)
+		{
+			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
+			value_type = info->value_type;
+			result_length = info->value_length;
+		};
 	}
 
-	RETURN(ret);
+	if (value_addr != nullptr)
+	{
+		if (ResultLength != nullptr)
+			*ResultLength = result_length;
+
+		if ((int)ValueLength >= result_length)
+		{
+			// TODO : Make EEPROM-access thread-safe
+
+			// TODO : Except for XC_FACTORY_GAME_REGION, check if the
+			// section being accessed has a valid checksum. If not,
+			// return STATUS_DEVICE_DATA_ERROR. (The checksum is a
+			// 32-bit 1's complement sum, that must equal 0xFFFFFFFF)
+
+			// Set the output value type :
+			*Type = value_type;
+			// Clear the output value buffer :
+			memset(Value, 0, ValueLength);
+			// Copy the emulated EEPROM value into the output value buffer :
+			memcpy(Value, value_addr, result_length);
+		}
+		else
+			Status = STATUS_BUFFER_TOO_SMALL;
+	}
+	else
+		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -515,51 +491,66 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
 (
 	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
+	IN  DWORD               Type,
 	IN  PVOID               Value,
 	IN  SIZE_T              ValueLength
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(XC_VALUE_INDEX, ValueIndex)
-		LOG_FUNC_ARG_OUT(Type)
+		LOG_FUNC_ARG(Type) // unused (see Note below)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(ValueLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS Status = STATUS_SUCCESS;
+	void * value_addr = nullptr;
+	DWORD result_length;
 
 	// handle eeprom write
-	const EEPROMInfo* info = FindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
-	if (info != nullptr)
+	if (ValueIndex == XC_FACTORY_GAME_REGION)
 	{
-		if (info->value_addr == nullptr)
-			LOG_UNIMPLEMENTED();
-		else
-		{
-			DWORD result_length = info->value_length; // sizeof(DWORD);
-			if (ValueLength != result_length)
-				ret = STATUS_INVALID_PARAMETER;
-			else
-			{
-				// Set the output value type :
-				if (Type != nullptr)
-					*Type = info->value_type; // REG_DWORD;
-
-				// Clear the output value buffer :
-				memset(info->value_addr, 0, result_length);
-				// Copy the input value buffer into the emulated EEPROM value :
-				memcpy(info->value_addr, Value, ValueLength);
-			}
-		}
+		value_addr = &XboxFactoryGameRegion;
+		result_length = sizeof(ULONG);
 	}
 	else
 	{
-		LOG_UNIMPLEMENTED();
-		ret = STATUS_OBJECT_NAME_NOT_FOUND;
+		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+		if (info != nullptr)
+		{
+			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
+			result_length = info->value_length;
+		};
 	}
 
-	RETURN(STATUS_SUCCESS);
+	// TODO : Only allow writing to factory section contents when running
+	// in DEVKIT mode, otherwise, nil the info pointer.
+	if (value_addr != nullptr)
+	{
+		// Note : Type could be verified against info->value_type here, but the orginal kernel doesn't even bother
+
+		if (ValueLength <= result_length)
+		{
+			// TODO : Make EEPROM-access thread-safe
+
+			// Clear the emulated EEMPROM value :
+			memset(value_addr, 0, result_length);
+			// Copy the input value buffer into the emulated EEPROM value :
+			memcpy(value_addr, Value, ValueLength);
+
+			// TODO : When writing to the factory settings section (thus in DEVKIT
+			// mode), set XboxFactoryGameRegion to FactorySettings.GameRegion,
+			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
+
+			// TODO : For each section being accessed, recalculate it's checksum
+		}
+		else
+			Status = STATUS_INVALID_PARAMETER;
+	}
+	else
+		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -597,19 +588,31 @@ XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType =
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	/* Save the first entry */
+	PLIST_ENTRY FirstEntry = ListHead->Flink;
+	/* Insert the new entry */
+	InsertHeadList(ListHead, ListEntry);
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old first entry or NULL for empty list */
+	if (FirstEntry == ListHead)
+		FirstEntry = NULL;
+
+	RETURN(FirstEntry);
 }
 
 // ******************************************************************
@@ -619,19 +622,32 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	/* Save the last entry */
+	PLIST_ENTRY LastEntry = ListHead->Blink;
+
+	/* Insert the new entry */
+	InsertTailList(ListHead, ListEntry);
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old last entry or NULL for empty list */
+	if (LastEntry == ListHead) 
+		LastEntry = NULL;
+
+	RETURN(LastEntry);
 }
 
 // ******************************************************************
@@ -640,16 +656,37 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
 (
-	IN PLIST_ENTRY ListHead,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListHead
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ListHead)
-		LOG_FUNC_ARG(Lock)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(ListHead);
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	PLIST_ENTRY ListEntry;
+
+	/* Check if the list is empty */
+	if (IsListEmpty(ListHead))
+	{
+		/* Return NULL */
+		ListEntry = NULL;
+	}
+	else
+	{
+		/* Remove the first entry from the list head */
+		ListEntry = RemoveHeadList(ListHead);
+#if DBG
+		ListEntry->Flink = (PLIST_ENTRY)0xBADDD0FF;
+		ListEntry->Blink = (PLIST_ENTRY)0xBADDD0FF;
+#endif
+	}
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the entry */
+	RETURN(ListEntry);
+
 }

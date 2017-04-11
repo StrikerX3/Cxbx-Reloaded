@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->WndAbout.h
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5028.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,40 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef WNDABOUT_H
-#define WNDABOUT_H
+#ifndef XAPI_5028_H
+#define XAPI_5028_H
 
-#include "Wnd.h"
+#include "OOVPA.h"
 
-// ******************************************************************
-// * class : WndAbout
-// ******************************************************************
-class WndAbout : public Wnd
-{
-    public:
-        // ******************************************************************
-        // * Constructor
-        // ******************************************************************
-        WndAbout(HINSTANCE x_hInstance, HWND x_parent);
-
-        // ******************************************************************
-        // * Deconstructor
-        // ******************************************************************
-       ~WndAbout();
-
-        // ******************************************************************
-        // * Window Message Handling Procedure
-        // ******************************************************************
-        LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    private:
-        // ******************************************************************
-        // * Drawing Data
-        // ******************************************************************
-        HDC         m_BackDC;
-        HBITMAP     m_OrigBmp;
-        HBITMAP     m_BackBmp;
-        HFONT       m_hFont;
-};
+extern OOVPATable XAPI_5028[];
+extern uint32     XAPI_5028_SIZE;
 
 #endif

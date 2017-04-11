@@ -36,23 +36,23 @@
 // For Burnout 3 Takedown
 
 // ******************************************************************
-// * D3D_CreateDevice
+// * Direct3D_CreateDevice
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDevice_LTCG, 5849, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice_LTCG, 5849, 8)
 
-        // D3D_CreateDevice+0x07 : jnz +0x0A
+        // Direct3D_CreateDevice+0x07 : jnz +0x0A
         { 0x07, 0x75 }, // (Offset,Value)-Pair #1
         { 0x08, 0x0A }, // (Offset,Value)-Pair #2
 
-        // D3D_CreateDevice+0x7F : rep stos
+        // Direct3D_CreateDevice+0x7F : rep stos
         { 0x7F, 0xF3 }, // (Offset,Value)-Pair #3
         { 0x80, 0xAB }, // (Offset,Value)-Pair #4
 
-        // D3D_CreateDevice+0x82 : mov eax, esi
+        // Direct3D_CreateDevice+0x82 : mov eax, esi
         { 0x82, 0x8B }, // (Offset,Value)-Pair #5
         { 0x83, 0xC6 }, // (Offset,Value)-Pair #6
 
-        // D3D_CreateDevice+0x8F : retn 0x18
+        // Direct3D_CreateDevice+0x8F : retn 0x18
         { 0x8F, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x90, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -269,7 +269,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TexCoordIndex_LTCG, 5849, 10)
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex_LTCG, 5849, 1+10,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x14 : shl eax, 0x07
         { 0x14, 0xC1 }, // (Offset,Value)-Pair #1
@@ -346,10 +351,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_CullMode_LTCG, 5849, 13,
+OOVPA_XREF(D3DDevice_SetRenderState_CullMode_LTCG, 5849, 2+13,
 
-    XREF_DXSRSCULLMODE,
-	XRefZero)
+    XREF_SETRENDERSTATE_CULLMODE,
+	XRefTwo)
+
+		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x23 : mov dword ptr [eax], 0x40308
         { 0x23, 0xC7 }, // (Offset,Value)-Pair #1
@@ -952,7 +960,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8LTCG_5849[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 5849, LTCG),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 5849, LTCG),
@@ -964,7 +972,7 @@ OOVPATable D3D8LTCG_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 5849, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5849, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 5849, LTCG),

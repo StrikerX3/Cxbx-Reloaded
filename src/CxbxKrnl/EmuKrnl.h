@@ -53,4 +53,6 @@ void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry);
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead);
 xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
 
+extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
+
 #endif

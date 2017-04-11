@@ -68,12 +68,6 @@ CRITICAL_SECTION dbgCritical;
 // Global Variable(s)
 HANDLE           g_hCurDir    = NULL;
 CHAR            *g_strCurDrive= NULL;
-HANDLE           g_hTDrive    = NULL;
-CHAR            *g_strTDrive  = NULL;
-HANDLE           g_hUDrive    = NULL;
-CHAR            *g_strUDrive  = NULL;
-HANDLE           g_hZDrive    = NULL;
-CHAR            *g_strZDrive  = NULL;
 volatile bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
@@ -84,37 +78,9 @@ LARGE_INTEGER	HostSystemTimeDelta = {};
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
-// Dll entry point, exit point, ...
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    static HINSTANCE hInitInstance = NULL;
-
-    if(fdwReason == DLL_PROCESS_ATTACH)
-    {
-#ifdef _DEBUG
-        InitializeCriticalSection(&dbgCritical);
-#endif
-
-        EmuShared::Init();
-        hInitInstance = hinstDLL;
-    }
-
-    if(fdwReason == DLL_PROCESS_DETACH)
-    {
-        if(hInitInstance == hinstDLL)
-            EmuShared::Cleanup();
-
-#ifdef _DEBUG
-        DeleteCriticalSection(&dbgCritical);
-#endif
-    }
-
-    return TRUE;
-}
-
 // print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
-extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
+void NTAPI EmuWarning(const char *szWarningMessage, ...)
 {
     if(szWarningMessage == NULL)
         return;
@@ -182,6 +148,7 @@ void EmuExceptionExitProcess()
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
+	EmuShared::Cleanup();
 	ExitProcess(1);
 }
 
@@ -267,31 +234,6 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-// check how many bytes were allocated for a structure
-extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound)
-{
-    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
-
-    DWORD dwRet;
-#ifdef _DEBUG_ALLOC
-    dwRet = CxbxVirtualQueryDebug(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
-    if (dwRet == -1)
-#endif
-    dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
-
-    if(dwRet == 0)
-        return 0;
-
-    if(MemoryBasicInfo.State != MEM_COMMIT)
-        return 0;
-
-    // this is a hack in order to determine when pointers come from a large write-combined database
-    if(largeBound && MemoryBasicInfo.RegionSize > 5*1024*1024)
-        return -1;
-
-    return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
-}
-
 // exception handle for that tough final exit :)
 int ExitException(LPEXCEPTION_POINTERS e)
 {
@@ -329,7 +271,8 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     static int const STACK_MAX     = 16;
     static int const SYMBOL_MAXLEN = 64;
 
-    EnterCriticalSection(&dbgCritical);
+	// TODO: Figure out why this causes a loop of Exceptions until the process dies
+    //EnterCriticalSection(&dbgCritical);
 
     IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
 
@@ -391,6 +334,6 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     if(fSymInitialized)
         SymCleanup(g_CurrentProcessHandle);
 
-    LeaveCriticalSection(&dbgCritical);
+    // LeaveCriticalSection(&dbgCritical);
 }
 #endif

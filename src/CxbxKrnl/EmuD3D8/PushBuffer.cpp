@@ -40,6 +40,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
+#include "CxbxKrnl/MemoryManager.h"
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
@@ -79,16 +80,16 @@ static void EmuUnswizzleActiveTexture()
         return;
 
 	XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-    DWORD dwBPP = 0;
 
-    if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
+    if(!XTL::EmuXBFormatIsSwizzled(XBFormat))
         return;
 
+	DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
     // remove lock
     pPixelContainer->EmuTexture8->UnlockRect(0);
     pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
 
-    // TODO: potentially CRC to see if this surface was actually modified..
+    // TODO: potentially XXHash32::hash() to see if this surface was actually modified..
 
     //
     // unswizzle texture
@@ -143,7 +144,7 @@ static void EmuUnswizzleActiveTexture()
 
                 pTexture->UnlockRect(0);
 
-                free(pTemp);
+				free(pTemp);
             }
         }
 
@@ -158,6 +159,11 @@ extern void XTL::EmuExecutePushBufferRaw
 {
     if(g_bSkipPush)
         return;
+
+	if (!pdwPushData) {
+		EmuWarning("pdwPushData is null");
+		return;
+	}
 
     DWORD *pdwOrigPushData = pdwPushData;
 
@@ -236,7 +242,7 @@ extern void XTL::EmuExecutePushBufferRaw
                 #endif
 
                 XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
+                PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
             }
         }
         else if(dwMethod == 0x1818) // NVPB_InlineVertexArray
@@ -836,7 +842,7 @@ void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
 	DWORD dwBytesWritten;
 
 	// Write pushbuffer data to the file.
-	// TODO: Cache the 32-bit CRC of each pushbuffer to ensure that the same
+	// TODO: Cache the 32-bit XXHash32::hash() of each pushbuffer to ensure that the same
 	// pushbuffer is not written twice within a given emulation session.
 	WriteFile( hFile, &g_CurrentVertexShader, sizeof( DWORD ), &dwBytesWritten, NULL );
 	WriteFile( hFile, PBData, dwSize, &dwBytesWritten, NULL );

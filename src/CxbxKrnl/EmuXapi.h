@@ -142,7 +142,9 @@ POLLING_PARAMETERS_HANDLE, *PPOLLING_PARAMETERS_HANDLE;
 // ******************************************************************
 typedef struct _XPP_DEVICE_TYPE
 {
-    ULONG Reserved[3];
+	ULONG CurrentConnected;
+	ULONG ChangeConnected;
+	ULONG PreviousConnected;
 }
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
@@ -253,6 +255,27 @@ typedef struct _XINPUT_FEEDBACK
 XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 
 // ******************************************************************
+// * XBGAMEPAD
+// ******************************************************************
+struct XBGAMEPAD : public XINPUT_GAMEPAD
+{
+	FLOAT      fX1;
+	FLOAT      fY1;
+	FLOAT      fX2;
+	FLOAT      fY2;
+	WORD       wLastButtons;
+	BOOL       bLastAnalogButtons[8];
+	WORD       wPressedButtons;
+	BOOL       bPressedAnalogButtons[8];
+	XINPUT_RUMBLE	Rumble;
+	XINPUT_FEEDBACK	Feedback;
+	XINPUT_CAPABILITIES caps;
+	HANDLE     hDevice;
+	BOOL       bInserted;
+	BOOL       bRemoved;
+};
+
+// ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************
 typedef struct _RTL_HEAP_PARAMETERS
@@ -322,6 +345,7 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 // ******************************************************************
 BOOL WINAPI EMUPATCH(XFormatUtilityDrive)();
 
+#if 0 // Handled by ExQueryNonVolatileSetting(XC_MAX_OS) returning XBOX_USER_SETTINGS
 // ******************************************************************
 // * patch: GetTimeZoneInformation
 // ******************************************************************
@@ -329,6 +353,7 @@ DWORD WINAPI EMUPATCH(GetTimeZoneInformation)
 (
     OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 );
+#endif
 
 // ******************************************************************
 // * patch: XMountUtilityDrive
@@ -355,6 +380,7 @@ DWORD WINAPI EMUPATCH(XGetDevices)
     XPP_DEVICE_TYPE *DeviceType
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
@@ -364,6 +390,7 @@ BOOL WINAPI EMUPATCH(XGetDeviceChanges)
     PDWORD           pdwInsertions,
     PDWORD           pdwRemovals
 );
+#endif
 
 // ******************************************************************
 // * patch: XInputOpen
@@ -498,6 +525,7 @@ VOID WINAPI EMUPATCH(XRegisterThreadNotifyRoutine)
     BOOL                    fRegister
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: CreateFiber
 // ******************************************************************
@@ -507,7 +535,9 @@ LPVOID WINAPI EMUPATCH(CreateFiber)
 	LPFIBER_START_ROUTINE	lpStartRoutine,
 	LPVOID					lpParameter
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
@@ -515,7 +545,9 @@ VOID WINAPI EMUPATCH(DeleteFiber)
 (
 	LPVOID lpFiber
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
@@ -523,7 +555,9 @@ VOID WINAPI EMUPATCH(SwitchToFiber)
 (
 	LPVOID lpFiber 
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: ConvertThreadToFiber
 // ******************************************************************
@@ -531,11 +565,14 @@ LPVOID WINAPI EMUPATCH(ConvertThreadToFiber)
 (
 	LPVOID lpParameter
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XapiFiberStartup
 // ******************************************************************
 VOID WINAPI EMUPATCH(XapiFiberStartup)(DWORD dwDummy);
+#endif
 
 // ******************************************************************
 // * patch: QueueUserAPC
@@ -567,6 +604,7 @@ DWORD WINAPI EMUPATCH(XLaunchNewImage)
 	PLAUNCH_DATA	pLaunchData
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetLaunchInfo
 // ******************************************************************
@@ -575,6 +613,7 @@ DWORD WINAPI EMUPATCH(XGetLaunchInfo)
 	PDWORD			pdwLaunchDataType,
 	PLAUNCH_DATA	pLaunchData
 );
+#endif
 
 // ******************************************************************
 // * patch: XSetProcessQuantumLength
@@ -699,11 +738,6 @@ DWORD WINAPI EMUPATCH(XInputGetDeviceDescription)
 );
 
 // ******************************************************************
-// * patch: XAutoPowerDownResetTimer
-// ******************************************************************
-int WINAPI EMUPATCH(XAutoPowerDownResetTimer)();
-
-// ******************************************************************
 // * patch: ReadFileEx
 // ******************************************************************
 BOOL WINAPI EMUPATCH(ReadFileEx)
@@ -725,6 +759,14 @@ BOOL WINAPI EMUPATCH(WriteFileEx)
 	DWORD nNumberOfBytesToWrite,                        // number of bytes to write
 	LPOVERLAPPED lpOverlapped,                          // overlapped buffer
 	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
+);
+
+// ******************************************************************
+// * patch: OutputDebugStringA
+// ******************************************************************
+VOID WINAPI EMUPATCH(OutputDebugStringA)
+(
+	IN LPCSTR lpOutputString
 );
 
 // s+

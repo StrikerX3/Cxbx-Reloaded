@@ -99,6 +99,7 @@ const uint08 XRefZero = (uint08)0;
 // This XRefOne constant, when set in the OOVPA.XRefCount field,
 // indicates the OOVPA contains one (1) {offset, XREF_* enum} pair.
 const uint08 XRefOne = (uint08)1;
+const uint08 XRefTwo = (uint08)2;
 
 // Note : Theoretically, there can be more than one {Offset, XREF_*-enum}
 // pair at the start of the OOVPA's, but there are no examples of that yet.
@@ -150,9 +151,7 @@ struct OOVPATable
 {
 	OOVPA *Oovpa;
 	void  *emuPatch;
-#ifdef _DEBUG_TRACE
 	char  *szFuncName;
-#endif
 	uint16_t Version : 13; // 2^13 = 8192, enough to store lowest and higest possible Library Version number in
 	uint16_t Flags : 3;
 };
@@ -161,13 +160,8 @@ const uint16_t Flag_IsLTCG = 1; // Indicates an entry that registers an LTCG OOV
 const uint16_t Flag_DontScan = 2; // Indicates an entry that's currently disabled and thus shouldn't be searched for
 const uint16_t Flag_Reserved = 4;
 
-#if _DEBUG_TRACE
 #define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
 	{ & Oovpa ## _ ## Version.Header, Patch, DebugName, Version, Flags }
-#else                                              
-#define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
-	{ & Oovpa ## _ ## Version.Header, Patch, /* skip */ Version, Flags }
-#endif
 
 // REGISTER_OOVPA is the ONLY allowed macro for registrations.
 // Registrations MUST stay sorted to prevent duplicates and maintain overview.

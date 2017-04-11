@@ -52,6 +52,10 @@ extern "C" {
 #define OPCODE_CALL_E8 0xE8
 #define OPCODE_JMP_E9 0xE9
 
+// Sizes
+#define ONE_KB 1024
+#define ONE_MB (1024 * 1024)
+
 // Thread Information Block offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
 #define TIB_ArbitraryDataSlot 0x14
 #define TIB_LinearSelfAddress 0x18
@@ -62,80 +66,117 @@ typedef uint32 xbaddr;
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 
-/*! memory size per system */
-#define XBOX_MEMORY_SIZE 64 * 1024 * 1024
-#define CHIHIRO_MEMORY_SIZE 128 * 1024 * 1024
+// Define virtual base and alternate virtual base of kernel.
+#define KSEG0_BASE                  0x80000000
 
-/*! maximum memory size our emulator must support */
-#define EMU_MAX_MEMORY_SIZE CHIHIRO_MEMORY_SIZE
+// Define virtual base addresses for physical memory windows.
+#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
+#define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
+#define MM_64M_PHYSICAL_PAGE        0x04000
+#define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
+#define MM_INSTANCE_PAGE_COUNT      16
+#define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
+
+/*! memory size per system */
+#define XBOX_MEMORY_SIZE (64 * ONE_MB)
+#define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
+#define XBE_IMAGE_BASE 0x00010000
 
 /*! base addresses of various components */
-#define XBOX_BASE_ADDR 0x00010000
-#define XBOX_KERNEL_BASE 0x80010000
+#define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
+// For now, virtual addresses are somewhat limited, as we use
+// these soley for loading XBE sections. The largest that we
+// know of, is "BLiNX: the time sweeper", which has a section
+// (called "$$XTIMAG") at 0x031C5260+0x00002800, which would
+// fit in 51 MB. If we ever encounter an even larger XBE, this
+// value will have to be increased likewise (maybe up to 64 MB
+// for XBOX_MEMORY_SIZE or even 128 MB for CHIHIRO_MEMORY_SIZE).
+#define XBE_MAX_VA	(64 * ONE_MB)
+
 /*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
-#define CXBX_BASE_ADDR XBOX_BASE_ADDR
+#define CXBX_BASE_ADDR XBE_IMAGE_BASE
+#define CXBX_BASE_OF_CODE 0x00001000
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
+// MAX_BUS_INTERRUPT_LEVEL = PROFILE_LEVEL = 27
 #define MAX_NUM_INTERRUPTS 256
+#define IRQ_BASE 0x30 
+
+#define PRIMARY_VECTOR_BASE IRQ_BASE
+
+// Source : ReactOS halirq.h : https://doxygen.reactos.org/d1/da9/halppc_2include_2halirq_8h_source.html
+#define IRQ2VECTOR(irq)     ((irq)+IRQ_BASE)
+#define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
+#define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
 
 /*! validate version string match */
-CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
+bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 /*! Cxbx Kernel Entry Point */
-CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[]);
+void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
-CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...);
+void CxbxKrnlCleanup(const char *szErrorMessage, ...);
 
 /*! register a thread handle */
-CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread);
+void CxbxKrnlRegisterThread(HANDLE hThread);
 
 /*! suspend emulation */
-CXBXKRNL_API void CxbxKrnlSuspend();
+void CxbxKrnlSuspend();
 
 /*! resume emulation */
-CXBXKRNL_API void CxbxKrnlResume();
+void CxbxKrnlResume();
 
 /*! terminate the calling thread */
-CXBXKRNL_API void CxbxKrnlTerminateThread();
+void CxbxKrnlTerminateThread();
 
 /*! kernel panic (trap for unimplemented kernel functions) */
-CXBXKRNL_API void CxbxKrnlPanic();
+void CxbxKrnlPanic();
 
 /*! empty function */
-CXBXKRNL_API void CxbxKrnlNoFunc();
+void CxbxKrnlNoFunc();
 
-CXBXKRNL_API void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
+void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
+
+void CxbxInitFilePaths();
+
+void CxbxRestorePersistentMemoryRegions();
+
+void ConnectWindowsTimersToThunkTable();
 
 /*! kernel thunk table */
-extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];
+extern uint32 CxbxKrnl_KernelThunkTable[379];
 
 /*! thread local storage structure */
-extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS;
+extern Xbe::TLS *CxbxKrnl_TLS;
 
 /*! thread local storage data */
-extern CXBXKRNL_API void *CxbxKrnl_TLSData;
+extern void *CxbxKrnl_TLSData;
 
 /*! xbe header structure */
-extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader;
+extern Xbe::Header *CxbxKrnl_XbeHeader;
 
 extern Xbe *CxbxKrnl_Xbe;
 
 /*! parent window handle */
-extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
-extern CXBXKRNL_API DebugMode CxbxKrnl_DebugMode;
-extern CXBXKRNL_API char* CxbxKrnl_DebugFileName;
+extern HWND CxbxKrnl_hEmuParent;
+extern DebugMode CxbxKrnl_DebugMode;
+extern char* CxbxKrnl_DebugFileName;
 
-extern void ConnectWindowsTimersToThunkTable();
+/*! file paths */
+extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
+extern char szFolder_CxbxReloadedData[MAX_PATH];
+extern char szFilePath_LaunchDataPage_bin[MAX_PATH];
+extern char szFilePath_EEPROM_bin[MAX_PATH];
 
 #ifdef __cplusplus
 }

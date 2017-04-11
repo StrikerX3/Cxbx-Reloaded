@@ -34,13 +34,6 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-/*! CxbxKrnl exports, others import */
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API __declspec(dllimport)
-#else
-#define CXBXKRNL_API __declspec(dllexport)
-#endif
-
 /*! \name primitive typedefs */
 /*! \{ */
 typedef signed int     sint;
@@ -82,14 +75,6 @@ typedef signed long    sint32;
 /*! define this to dump textures that are registered */
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "D:\\cxbx\\_textures\\"
 
-#include "Version.h"
-
-/*! version string dependent on trace flag */
-#ifndef _DEBUG_TRACE
-#define _CXBX_VERSION _GIT_VERSION " (" __DATE__  ")"
-#else
-#define _CXBX_VERSION _GIT_VERSION "-Trace (" __DATE__  ")"
-#endif
 
 /*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };

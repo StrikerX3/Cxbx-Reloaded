@@ -37,14 +37,18 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
+#include "CxbxKrnl/MemoryManager.h"
 
 #include <ctime>
 
-#define VERTEX_BUFFER_CACHE_SIZE 64
+#define HASH_SEED 0
+
+#define VERTEX_BUFFER_CACHE_SIZE 256
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // inline vertex buffer emulation
@@ -56,55 +60,6 @@ extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
 extern DWORD				XTL::g_dwPrimPerFrame = 0;
-static unsigned int crctab[256];
-
-static void CRC32Init(void)
-{
-    static boolean bFirstTime = true;
-    int i, j;
-
-    unsigned int crc;
-
-    if(!bFirstTime)
-    {
-        return;
-    }
-    for(i = 0; i < 256; i++)
-    {
-        crc = i << 24;
-        for(j = 0; j < 8; j++)
-        {
-            if(crc & 0x80000000)
-                crc = (crc << 1) ^ 0x04c11db7;
-            else
-                crc = crc << 1;
-        }
-        crctab[i] = crc;
-    }
-    bFirstTime = false;
-}
-
-static unsigned int CRC32(unsigned char *data, int len)
-{
-    unsigned int        result;
-    int                 i;;
-
-    if(len < 4) abort();
-
-    result = *data++ << 24;
-    result |= *data++ << 16;
-    result |= *data++ << 8;
-    result |= *data++;
-    result = ~ result;
-    len -=4;
-
-    for(i=0; i<len; i++)
-    {
-        result = (result << 8 | *data++) ^ crctab[result >> 24];
-    }
-
-    return ~result;
-}
 
 XTL::VertexPatcher::VertexPatcher()
 {
@@ -114,7 +69,6 @@ XTL::VertexPatcher::VertexPatcher()
     this->m_bAllocatedStreamZeroData = false;
     this->m_pNewVertexStreamZeroData = NULL;
     this->m_pDynamicPatch = NULL;
-    CRC32Init();
 }
 
 XTL::VertexPatcher::~VertexPatcher()
@@ -131,11 +85,11 @@ void XTL::VertexPatcher::DumpCache(void)
         if(pCachedStream)
         {
             // TODO: Write nicer dump presentation
-            printf("Key: 0x%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: 0x%.08X\n",
+            printf("Key: 0x%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d HashCount: %d HashFreq: %d Length: %d Hash: 0x%.08X\n",
                    pNode->uiKey, pCachedStream->uiCacheHit, pCachedStream->bIsUP ? "YES" : "NO",
                    pCachedStream->Stream.uiOrigStride, pCachedStream->Stream.uiNewStride,
                    pCachedStream->uiCount, pCachedStream->uiCheckFrequency,
-                   pCachedStream->uiLength, pCachedStream->uiCRC32);
+                   pCachedStream->uiLength, pCachedStream->uiHash);
         }
 
         pNode = pNode->pNext;
@@ -151,7 +105,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
-    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxCalloc(1, sizeof(CACHEDSTREAM));
+    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)calloc(1, sizeof(CACHEDSTREAM));
 
     // Check if the cache is full, if so, throw away the least used stream
     if(g_PatchedStreamsCache.get_count() > VERTEX_BUFFER_CACHE_SIZE)
@@ -222,13 +176,13 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
         uiKey = (uint32)pCalculateData;
     }
 
-    UINT uiChecksum = CRC32((unsigned char *)pCalculateData, uiLength);
+    uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
     if(!pPatchDesc->pVertexStreamZeroData)
     {
         pOrigVertexBuffer->Unlock();
     }
 
-    pCachedStream->uiCRC32 = uiChecksum;
+    pCachedStream->uiHash = uiHash;
     pCachedStream->Stream = m_pStreams[uiStream];
     pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
     pCachedStream->uiCount = 0;
@@ -247,7 +201,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
     {
         if(pCachedStream->bIsUP && pCachedStream->pStreamUP)
         {
-            CxbxFree(pCachedStream->pStreamUP);
+            free(pCachedStream->pStreamUP);
         }
         if(pCachedStream->Stream.pOriginalStream)
         {
@@ -257,7 +211,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
         {
             pCachedStream->Stream.pPatchedStream->Release();
         }
-        CxbxFree(pCachedStream);
+        free(pCachedStream);
     }
     g_PatchedStreamsCache.Unlock();
     g_PatchedStreamsCache.remove(pStream);
@@ -274,7 +228,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     UINT                       uiLength;
     bool                       bApplied = false;
     uint32                     uiKey;
-    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxMalloc(sizeof(CACHEDSTREAM));
+    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)malloc(sizeof(CACHEDSTREAM));
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
@@ -333,8 +287,8 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 }
             }
             // Use the cached stream length (which is a must for the UP stream)
-            uint32 Checksum = CRC32((uint08*)pCalculateData, pCachedStream->uiLength);
-            if(Checksum == pCachedStream->uiCRC32)
+            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
+            if(uiHash == pCachedStream->uiHash)
             {
                 // Take a while longer to check
                 if(pCachedStream->uiCheckFrequency < 32*1024)
@@ -495,7 +449,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         // TODO: This is sometimes the number of indices, which isn't too good
         dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
-        pNewData = (uint08*)CxbxMalloc(dwNewSize);
+        pNewData = (uint08*)g_MemoryManager.Allocate(dwNewSize);
         if(!pNewData)
         {
             CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
@@ -823,7 +777,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 {
     PATCHEDSTREAM *pStream = &m_pStreams[uiStream];
 
-    if((pPatchDesc->PrimitiveType) < 1 || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
+    if((pPatchDesc->PrimitiveType < X_D3DPT_POINTLIST) || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
     {
         CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pPatchDesc->PrimitiveType);
     }
@@ -944,7 +898,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
-        m_pNewVertexStreamZeroData = (uint08*)CxbxMalloc(dwNewSizeWR);
+        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSizeWR);
         m_bAllocatedStreamZeroData = true;
 
         pPatchedVertexData = (uint08*)m_pNewVertexStreamZeroData;
@@ -1084,7 +1038,7 @@ bool XTL::VertexPatcher::Restore()
 
             if(this->m_bAllocatedStreamZeroData)
             {
-                CxbxFree(m_pNewVertexStreamZeroData);
+                free(m_pNewVertexStreamZeroData);
             }
         }
         else
@@ -1292,7 +1246,7 @@ VOID XTL::EmuFlushIVB()
     }
 
     g_pD3DDevice8->DrawPrimitiveUP(
-        EmuPrimitiveType(VPDesc.PrimitiveType),
+		EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
         VPDesc.dwPrimitiveCount,
         VPDesc.pVertexStreamZeroData,
         VPDesc.uiVertexStreamZeroStride);
@@ -1336,7 +1290,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
-            if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
+            if(X_Format == X_D3DFMT_X8R8G8B8 || X_Format == X_D3DFMT_A8R8G8B8)
             {
                 bSwizzled = TRUE;
 
@@ -1348,9 +1302,9 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwPitch  = dwWidth*4;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+            else if(X_Format == X_D3DFMT_R5G6B5 || X_Format == X_D3DFMT_A4R4G4B4
+                 || X_Format == X_D3DFMT_A1R5G5B5 || X_Format == X_D3DFMT_X1R5G5B5
+                 || X_Format == X_D3DFMT_G8B8 || X_Format == X_D3DFMT_A8L8)
             {
                 bSwizzled = TRUE;
 
@@ -1362,8 +1316,8 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ 
-				 || X_Format == 0x01 /* X_D3DFMT_AL8 */)
+            else if(X_Format == X_D3DFMT_L8 || X_Format == X_D3DFMT_P8
+				 || X_Format == X_D3DFMT_AL8)
             {
                 bSwizzled = TRUE;
 
@@ -1375,8 +1329,8 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwPitch  = dwWidth;
                 dwBPP = 1;
             }
-            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_LIN_A8R8G8B8 */ 
-				 || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */ || X_Format == 0x3F /* X_D3DFMT_LIN_A8B8G8R8 */)
+            else if(X_Format == X_D3DFMT_LIN_X8R8G8B8 || X_Format == X_D3DFMT_LIN_A8R8G8B8
+				 || X_Format == X_D3DFMT_LIN_D24S8 || X_Format == X_D3DFMT_LIN_A8B8G8R8)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1384,8 +1338,8 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */ || X_Format == 0x30 /* D3DFMT_LIN_D16 */
-				 ||  X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */ )
+            else if(X_Format == X_D3DFMT_LIN_R5G6B5 || X_Format == X_D3DFMT_LIN_D16
+				 ||  X_Format == X_D3DFMT_LIN_A4R4G4B4 || X_Format == X_D3DFMT_LIN_A1R5G5B5 )
             {
                 // Linear 16 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1393,7 +1347,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
+            else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT3 || X_Format == X_D3DFMT_DXT5)
             {
                 bCompressed = TRUE;
 
@@ -1406,12 +1360,12 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
                 dwCompressedSize = dwWidth*dwHeight;
 
-                if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
+                if(X_Format == X_D3DFMT_DXT1) // D3DFMT_DXT1 : 64bits per block/per 16 texels
                     dwCompressedSize /= 2;
 
                 dwBPP = 1;
             }
-            else if(X_Format == 0x24 /* D3DFMT_YUY2 */)
+            else if(X_Format == X_D3DFMT_YUY2)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1446,7 +1400,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
 
                 BYTE *pSrc = (BYTE*)pTexture->Data;
 
-                if( IsSpecialResource(pResource->Data) && (pResource->Data & X_D3DRESOURCE_DATA_FLAG_SURFACE))
+                if( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                 {
 
                 }

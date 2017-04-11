@@ -43,11 +43,15 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
 };
 
+#include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
+#include "EmuEEPROM.h" // For EEPROM
+#include "EmuShared.h"
+#include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
 namespace NtDll
@@ -104,19 +108,14 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-// Source:ReactOS
 XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql
+	IN ULONG BusInterruptLevel
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Vector)
-		LOG_FUNC_ARG(Irql)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
 }
 
 // ******************************************************************
@@ -140,21 +139,18 @@ XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-// Source:ReactOS
 XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql,
-	KINTERRUPT_MODE InterruptMode
+	IN ULONG BusInterruptLevel,
+	IN KINTERRUPT_MODE InterruptMode
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Vector)
-		LOG_FUNC_ARG(Irql)
+		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
 
 	RETURN(FALSE);
 }
@@ -167,9 +163,9 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 	"USB0", // IRQ 1 USB Controller: nVidia Corporation nForce USB Controller (rev d4) (prog-if 10 [OHCI])
 	"<unknown>",
 	"GPU", // IRQ 3 VGA compatible controller: nVidia Corporation: Unknown device 02a0 (rev a1) (prog-if 00 [VGA])
-	"NET", // IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
-	"<unknown>",
-	"APU", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
+	"NIC", // Network Interface Card IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
+	"APU", // IRQ 5 APU
+	"ACI", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
 	"<unknown>",
 	"<unknown>",
 	"USB1", // IRQ 9 USB Controller : nVidia Corporation nForce USB Controller(rev d4) (prog - if 10[OHCI])
@@ -177,7 +173,7 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 	"<unknown>",
 	"<unknown>",
 	"<unknown>",
-	"<unknown>",
+	"IDE", // IRQ 14
 	"<unknown>",
 	"<unknown>",
 	"<unknown>",
@@ -196,38 +192,55 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 (
-	IN ULONG   InterruptLevel,
+	IN ULONG   BusInterruptLevel,
 	OUT PKIRQL  Irql
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(InterruptLevel)
+		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
 
-	// -blueshogun : I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
-	// EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
+	// Note : blueshogun added this HalGetInterruptVector mock-up for
+	// Virtua Cop 3 (Chihiro) and assumed Xbox games need not emulate this.
+	// However, even something as simple as the OpenXDK XInput library uses this,
+	// PLUS Cxbx will execute it's own preemptive thread-switching, after which
+	// interrupt handling must be implememented too, including this API.
 
 	ULONG dwVector = 0;
 
-	if((InterruptLevel >=0) && (InterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
+	if((BusInterruptLevel >=0) && (BusInterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
 	{
-		// Why 0x30? On Win2k the vector is 0x30+IRQ, so it like that
-		dwVector = 0x30 + InterruptLevel;
-
+		dwVector = IRQ2VECTOR(BusInterruptLevel);
 		if(Irql)
-			*Irql = (KIRQL)(MAX_BUS_INTERRUPT_LEVEL - InterruptLevel);
+			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
 		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
-			InterruptLevel, IRQNames[InterruptLevel]);
+			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
 
 	RETURN(dwVector);
 }
+
+#define SMC_SLAVE_ADDRESS 0x20
+#define SMBUS_SMC_WRITE SMC_SLAVE_ADDRESS // = 0x20
+#define SMBUS_SMC_READ (SMC_SLAVE_ADDRESS || 1) // = 0x21
+
+#define EEPROM_ADDRESS 0xA8
+#define SMBUS_EEPROM_WRITE EEPROM_ADDRESS // = 0xA8
+#define SMBUS_EEPROM_READ (EEPROM_ADDRESS || 1) // = 0xA9
+
+#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_WRITE SMBUS_TV_ENCODER_ID_CONEXANT // = 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_READ (SMBUS_TV_ENCODER_ID_CONEXANT_WRITE || 1) // = 0x8B
+
+#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_WRITE SMBUS_TV_ENCODER_ID_FOCUS // = 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_READ (SMBUS_TV_ENCODER_ID_FOCUS_WRITE || 1) // = 0xD5
 
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
@@ -247,18 +260,26 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	NTSTATUS Status = STATUS_SUCCESS;
 
-	if (ReadWord) {
-		// Write UCHAR
+	switch (Address) {
+	case SMBUS_EEPROM_READ: {
+		if (ReadWord)
+			*DataValue = *((PWORD)(((PBYTE)EEPROM) + Command));
+		else
+			*DataValue = *(((PBYTE)EEPROM) + Command);
+
+		break;
 	}
-	else {
-		// Write BYTE
-		if (DataValue)
-			*DataValue = 1;
+	default:
+		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
+		// Resources : http://pablot.com/misc/fancontroller.cpp
+		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
+		LOG_INCOMPLETE();
+		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(Status );
 }
 
 // ******************************************************************
@@ -391,7 +412,70 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+
+	switch (Routine) {
+	case ReturnFirmwareHalt:
+		CxbxKrnlCleanup("Emulated Xbox is halted");
+		break;
+
+	case ReturnFirmwareReboot:
+		LOG_UNIMPLEMENTED(); // fall through
+	case ReturnFirmwareQuickReboot:
+	{
+		if (xboxkrnl::LaunchDataPage == NULL)
+			LOG_UNIMPLEMENTED();
+		else
+		{
+			// Save the launch data page to disk for later.
+			// (Note : XWriteTitleInfoNoReboot does this too)
+			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+
+			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+			char szXbePath[MAX_PATH];
+			char szWorkingDirectoy[MAX_PATH];
+
+			// Convert Xbox XBE Path to Windows Path
+			{
+				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+			}
+
+			// Determine Working Directory
+			{
+				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				PathRemoveFileSpec(szWorkingDirectoy);
+			}
+
+			// Relaunch Cxbx, to load another Xbe
+			{
+				char szArgsBuffer[4096];
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+			}
+		}
+		break;
+	};
+
+	case ReturnFirmwareHard:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	case ReturnFirmwareFatal:
+		MessageBox(NULL, "Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)", "Cxbx-Reloaded", MB_OK);
+		break;
+
+	case ReturnFirmwareAll:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	default:
+		LOG_UNIMPLEMENTED();
+	}
+
+	EmuShared::Cleanup();
+	ExitProcess(EXIT_SUCCESS);
 }
 
 // ******************************************************************
@@ -412,10 +496,26 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		LOG_FUNC_ARG(DataValue)
 		LOG_FUNC_END;
 
-	// TODO: Later.
-	LOG_UNIMPLEMENTED();
+	NTSTATUS Status = STATUS_SUCCESS;
 
-	RETURN(STATUS_SUCCESS);
+	switch (Address) {
+	case SMBUS_EEPROM_WRITE: {
+		if (WriteWord)
+			*((PWORD)(((PBYTE)EEPROM) + Command)) = (WORD)DataValue;
+		else
+			*(((PBYTE)EEPROM) + Command) = (BYTE)DataValue;
+
+		break;
+	}
+	default:
+		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
+		// Resources : http://pablot.com/misc/fancontroller.cpp
+		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
+		LOG_INCOMPLETE();
+		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
+	}
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -434,7 +534,8 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -453,7 +554,8 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -472,7 +574,8 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -491,7 +594,8 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -510,7 +614,8 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -529,14 +634,15 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
-XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()
@@ -572,7 +678,7 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 // * 0x016D - HalEnableSecureTrayEject()
 // ******************************************************************
 // Notifies the SMBUS that ejecting the DVD-ROM should not reset the system.
-// Note that this function can't really be called directly...
+// Note that HalEnableSecureTrayEject can't really be called directly...
 //
 // New to the XBOX.
 // Source:XBMC Undocumented.h

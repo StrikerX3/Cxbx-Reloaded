@@ -53,11 +53,18 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
+#include "MemoryManager.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
+
+#define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
+
+#define MM_HIGHEST_USER_ADDRESS     (PVOID)0x7FFEFFFF
+#define X64K                        ((ULONG)64*1024)
+#define MM_HIGHEST_VAD_ADDRESS      ((PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - X64K))
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -79,27 +86,65 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
-	// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
-	// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
-	// this flag fixes Azurik for XP.
-	DWORD MEM_NOZERO = 0x800000;
+	NTSTATUS ret = 0;
 
-	if (AllocationType & MEM_NOZERO)
+	PVOID RequestedBaseAddress = *BaseAddress;
+	ULONG RequestedAllocationSize = *AllocationSize;
+
+	// Don't allow base address to exceed highest virtual address
+	if (RequestedBaseAddress > MM_HIGHEST_VAD_ADDRESS)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Limit number of zero bits upto 20
+	if (ZeroBits > 21)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// No empty allocation allowed
+	if (RequestedAllocationSize == 0)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Allocation should fit in remaining address range
+	if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)RequestedBaseAddress + 1) < RequestedAllocationSize)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Only known flags are allowed
+	if ((AllocationType & ~MEM_KNOWN_FLAGS) != 0)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// No other flags allowed in combination with MEM_RESET
+	if (AllocationType & MEM_RESET)
 	{
-		EmuWarning("MEM_NOZERO flag is not supported!");
-		AllocationType &= ~MEM_NOZERO;
+		if (AllocationType != MEM_RESET)
+			ret = STATUS_INVALID_PARAMETER;
 	}
+	else
+		// At least MEM_RESET, MEM_COMMIT or MEM_RESERVE must be set
+		if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
+			ret = STATUS_INVALID_PARAMETER;
 
-	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		BaseAddress,
-		ZeroBits,
-		/*RegionSize=*/AllocationSize,
-		AllocationType,
-		Protect);
+	if (ret == 0)
+	{
+		// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
+		// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
+		// this flag fixes Azurik for XP.
 
-	if (ret == 0xC00000F3)
-		EmuWarning("Invalid Param!");
+		if (AllocationType & MEM_NOZERO)
+		{
+			EmuWarning("MEM_NOZERO flag is not supported!");
+			AllocationType &= ~MEM_NOZERO;
+		}
+
+		ret = NtDll::NtAllocateVirtualMemory(
+			/*ProcessHandle=*/g_CurrentProcessHandle,
+			BaseAddress,
+			ZeroBits,
+			/*RegionSize=*/AllocationSize,
+			AllocationType,
+			Protect);
+
+		if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
+			EmuWarning("Invalid Param!");
+	}
 
 	RETURN(ret);
 }
@@ -165,6 +210,8 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
+
+		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
 	else
 		// close normal handles
@@ -229,6 +276,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(EventType)
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
+
 /*
 	NTSTATUS Status;
 
@@ -237,8 +285,8 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	}
 	else {
 		PKEVENT Event;
-		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
 
+		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
 		if (NT_SUCCESS(Status)) {
 			KeInitializeEvent(Event, EventType, InitialState);
 			Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
@@ -247,6 +295,8 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	RETURN(Status);
 */
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
+
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
 	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
@@ -291,6 +341,8 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
 	LOG_FORWARD("IoCreateFile");
 
+	// TODO : How to base IoCreateFile on ObCreateObject, KeInitialize and ObInsertObject ?
+
 	return xboxkrnl::IoCreateFile(
 		FileHandle,
 		DesiredAccess,
@@ -319,6 +371,26 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
+
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKMUTANT Mutant;
+
+		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeMutant(Mutant, InitialOwner);
+			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
 
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
@@ -360,6 +432,26 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		LOG_FUNC_ARG(MaximumCount)
 		LOG_FUNC_END;
 
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKSEMAPHORE Semaphore;
+
+		Status = ObCreateObject(&ExSemaphoreObjectType, ObjectAttributes, sizeof(KSEMAPHORE), (PVOID *)&Semaphore);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeSemaphore(Semaphore, InitialCount, /*Limit=* /MaximumCount);
+			Status = ObInsertObject(Semaphore, ObjectAttributes, 0, /*OUT* /SemaphoreHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeSemaphore and ObInsertObject instead of this:
+
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
 
@@ -397,6 +489,26 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(TimerType)
 		LOG_FUNC_END;
+
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKTIMER Timer;
+
+		Status = ObCreateObject(&ExTimerType, ObjectAttributes, sizeof(KTIMER), (PVOID *)&Timer);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeTimerEx(Timer, TimerType);
+			Status = ObInsertObject(Timer, ObjectAttributes, 0, /*OUT* /TimerHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeTimerEx and ObInsertObject instead of this:
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
@@ -523,6 +635,20 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	if (IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
+/*
+		PVOID Object;
+
+		ret = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=* /NULL, &Object);
+		if (NT_SUCCESS(ret)) {
+			if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
+				NtClose(SourceHandle);
+
+			status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT* /TargetHandle);
+			ObDereferenceObject(Object);
+		}
+		else
+			*TargetHandle = NULL;
+*/
 	}
 	else
 	{
@@ -858,7 +984,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	}
 
 	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo = 
-		(NtDll::FILE_DIRECTORY_INFORMATION *) CxbxMalloc(NtFileDirectoryInformationSize + NtPathBufferSize);
+		(NtDll::FILE_DIRECTORY_INFORMATION *) malloc(NtFileDirectoryInformationSize + NtPathBufferSize);
 
 	// Short-hand pointer to Nt filename :
 	wchar_t *wcstr = NtFileDirInfo->FileName;
@@ -897,7 +1023,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	}
 
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-	CxbxFree(NtFileDirInfo);
+	free(NtFileDirInfo);
 
 	RETURN(ret);
 }
@@ -995,7 +1121,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	// We need to retry the operation in case the buffer is too small to fit the data
 	do
 	{
-		ntFileInfo = CxbxMalloc(bufferSize);
+		ntFileInfo = malloc(bufferSize);
 
 		ret = NtDll::NtQueryInformationFile(
 			FileHandle,
@@ -1007,14 +1133,14 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		// Buffer is too small; make a larger one
 		if (ret == STATUS_BUFFER_OVERFLOW)
 		{
-			CxbxFree(ntFileInfo);
+			free(ntFileInfo);
 
 			bufferSize *= 2;
 			// Bail out if the buffer gets too big
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 			
-			ntFileInfo = CxbxMalloc(bufferSize);
+			ntFileInfo = malloc(bufferSize);
 		}
 	} while (ret == STATUS_BUFFER_OVERFLOW);
 	
@@ -1022,7 +1148,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
 
 	// Make sure to free the memory first
-	CxbxFree(ntFileInfo);
+	free(ntFileInfo);
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
@@ -1383,6 +1509,8 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 		ThreadHandle, 
 		PreviousSuspendCount);
 
+	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
+
 	Sleep(10);
 
 	RETURN(ret);
@@ -1548,6 +1676,8 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 		ThreadHandle, 
 		PreviousSuspendCount);
 
+	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
+
 	RETURN(ret);
 }
 
@@ -1567,59 +1697,19 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 		LOG_FUNC_ARG(Reserved)
 		LOG_FUNC_END;
 
-	uint32 dwEsi, dwEax, dwEcx;
+	ULONG dwErrorCode = 0;
+	ULONG dwTransferred = 0;
 
-	dwEsi = (uint32)IoStatusBlock;
-
-	if ((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
-	{
-		dwEcx = 0;
-		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
-	}
-	else
-	{
-		dwEcx = (DWORD)IoStatusBlock->Information;
-		dwEax = 0;
+	if (NT_SUCCESS(IoStatusBlock->Status)) {
+		dwTransferred = (ULONG)IoStatusBlock->Information;
+	} else {
+		dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
 	}
 
-	/*
-	// ~XDK 3911??
-	if(true)
-	{
-	dwEsi = dw2;
-	dwEcx = dw1;
-	dwEax = dw3;
+	LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
+	LPOVERLAPPED lpOverlapped = (LPOVERLAPPED)CONTAINING_RECORD(IoStatusBlock, OVERLAPPED, Internal);
 
-	}
-	else
-	{
-	dwEsi = dw1;
-	dwEcx = dw2;
-	dwEax = dw3;
-	}//*/
-
-	__asm
-	{
-		pushad
-		/*
-		mov esi, IoStatusBlock
-		mov ecx, dwEcx
-		mov eax, dwEax
-		*/
-		// TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
-		// Seems to be XDK/version dependand??
-		mov esi, dwEsi
-		mov ecx, dwEcx
-		mov eax, dwEax
-
-		push esi
-		push ecx
-		push eax
-
-		call ApcContext
-
-		popad
-	}
+	(CompletionRoutine)(dwErrorCode, dwTransferred, lpOverlapped);
 
 	DbgPrintf("EmuKrnl: NtUserIoApcDispatcher Completed\n");
 }
