@@ -22,7 +22,7 @@ doc/doxygen/html
 #Export
 export
 
-#Visual Studio files
+#Visual Studio files and folders
 *.[Oo]bj
 *.user
 *.aps
@@ -48,6 +48,7 @@ build/win32/[Dd]ebug*/
 build/win32/[Rr]elease*/
 Build/win32/ipch/
 Ankh.NoLoad
+.vs/
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
