@@ -111,9 +111,6 @@ typedef uint32 xbaddr;
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
-#define XBOX_KERNEL_BASE 0x80010000
-#define XBOX_NV2A_INIT_VECTOR 0xFF000008
-
 
 /*! validate version string match */
 bool CxbxKrnlVerifyVersion(const char *szVersion);

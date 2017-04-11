@@ -447,7 +447,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 			else
 				DeviceIndex = CxbxDeviceIndexByDevicePath(aFullPath.c_str());
 
-
 			if (DeviceIndex >= 0)
 			{
 				result = STATUS_SUCCESS;
@@ -463,7 +462,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 					HostSymbolicLinkPath = Devices[DeviceIndex].HostDevicePath;
 					// Handle the case where a sub folder of the partition is mounted (instead of its root) :
 					std::string ExtraPath = aFullPath.substr(Devices[DeviceIndex].XboxDevicePath.length(), std::string::npos);
-
 
 					if (!ExtraPath.empty())
 						HostSymbolicLinkPath = HostSymbolicLinkPath + ExtraPath;
