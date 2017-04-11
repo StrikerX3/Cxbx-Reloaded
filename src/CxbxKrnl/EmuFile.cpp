@@ -344,35 +344,6 @@ NTSTATUS CxbxObjectAttributesToNT(
 		RelativeHostPath = string_to_wstring(ObjectName);
 
 	// Copy the wide string to the unicode string
-	RelativeNativePath = string_to_wstring(RelativePath);
-
-	return STATUS_SUCCESS;
-}
-
-NTSTATUS CxbxObjectAttributesToNT(
-	xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, 
-	NativeObjectAttributes& nativeObjectAttributes, 
-	const std::string aFileAPIName)
-{
-	NTSTATUS result = STATUS_SUCCESS;
-	std::string RelativeXboxPath;
-	std::wstring RelativeNativePath;
-	NtDll::HANDLE RootDirectory;
-
-	if (ObjectAttributes == NULL)
-	{
-		// When the pointer is nil, make sure we pass nil to Windows too :
-		nativeObjectAttributes.NtObjAttrPtr = NULL;
-		return result;
-	}
-
-	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
-	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
-
-	RelativeXboxPath = PSTRING_to_string(ObjectAttributes->ObjectName);
-	result = _CxbxConvertFilePath(RelativeXboxPath, RelativeNativePath, &RootDirectory, aFileAPIName);
-
-	// Copy relative path string to the unicode string
 	wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
 	NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
 	// And initialize the NT ObjectAttributes with that :
