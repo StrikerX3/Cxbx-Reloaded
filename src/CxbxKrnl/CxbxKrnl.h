@@ -111,7 +111,6 @@ typedef uint32 xbaddr;
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
-
 /*! validate version string match */
 bool CxbxKrnlVerifyVersion(const char *szVersion);
 
