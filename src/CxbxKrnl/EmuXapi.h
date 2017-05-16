@@ -380,7 +380,6 @@ DWORD WINAPI EMUPATCH(XGetDevices)
     XPP_DEVICE_TYPE *DeviceType
 );
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
@@ -390,7 +389,6 @@ BOOL WINAPI EMUPATCH(XGetDeviceChanges)
     PDWORD           pdwInsertions,
     PDWORD           pdwRemovals
 );
-#endif
 
 // ******************************************************************
 // * patch: XInputOpen
@@ -596,9 +594,9 @@ BOOL WINAPI EMUPATCH(GetOverlappedResult)
 );
 
 // ******************************************************************
-// * patch: XLaunchNewImage
+// * patch: XLaunchNewImageA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XLaunchNewImage)
+DWORD WINAPI EMUPATCH(XLaunchNewImageA)
 (
 	LPCSTR			lpTitlePath,
 	PLAUNCH_DATA	pLaunchData
@@ -695,9 +693,9 @@ DWORD WINAPI EMUPATCH(XMountMURootA)
 );
 
 // ******************************************************************
-// * patch: XMountAlternateTitle
+// * patch: XMountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XMountAlternateTitle)
+DWORD WINAPI EMUPATCH(XMountAlternateTitleA)
 (
 	LPCSTR		lpRootPath,               
 	DWORD		dwAltTitleId,               
@@ -705,9 +703,9 @@ DWORD WINAPI EMUPATCH(XMountAlternateTitle)
 );
 
 // ******************************************************************
-// * patch: XUnmountAlternateTitle
+// * patch: XUnmountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XUnmountAlternateTitle)(CHAR chDrive);
+DWORD WINAPI EMUPATCH(XUnmountAlternateTitleA)(CHAR chDrive);
 
 // ******************************************************************
 // * patch: MoveFileA

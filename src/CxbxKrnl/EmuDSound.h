@@ -573,6 +573,16 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    const LONG*             alVolumes
+);
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+(
+    LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins    // TODO: fill this out
 );
 
@@ -917,9 +927,9 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundStream_SetHeadroom
+// * patch: DirectSound_CDirectSoundStream_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetHeadroom)
+HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetHeadroom)
 (
     PVOID   pThis,
     DWORD   dwHeadroom
@@ -1515,6 +1525,15 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetEffectData)
     LPCVOID pvData,
     DWORD dwDataSize,
     DWORD dwApply
+);
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+(
+    LPVOID pThis,
+    LPUNKNOWN       pUnknown
 );
 
 // ******************************************************************

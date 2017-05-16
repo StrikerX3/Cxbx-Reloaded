@@ -52,6 +52,7 @@ namespace NtDll
 };
 
 #include "EmuXTL.h"
+#include "EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 
 // ******************************************************************
 // * patch: XGIsSwizzledFormat
@@ -61,12 +62,13 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
     X_D3DFORMAT Format
 )
 {
+	FUNC_EXPORTS
 	LOG_FUNC_ONE_ARG(Format);
 
 	RETURN(FALSE);
 }
 
-/* Leave unpatched
+#if 0 // Leave unpatched
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
@@ -82,6 +84,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
     DWORD         BytesPerPixel
 )
 {
+	FUNC_EXPORTS
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(Pitch)
@@ -125,7 +128,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
         }
     }
 }
-*/
+#endif
 
 // ******************************************************************
 // * patch: XGSwizzleBox
@@ -144,6 +147,8 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
     DWORD            BytesPerPixel
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(RowPitch)
@@ -204,6 +209,8 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 	BOOL			bWriteSurfaceAsTexture
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pResource)
 		LOG_FUNC_ARG(cPath)
@@ -235,6 +242,8 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	UINT			Pitch
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
@@ -296,7 +305,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 //	void			**ppFont
 //)
 //{
-//		
+//		FUNC_EXPORTS
 //
 //		LOG_FUNC_BEGIN
 //			LOG_FUNC_ARG(pFontData)
